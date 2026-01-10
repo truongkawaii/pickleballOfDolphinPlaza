@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dolphin Plaza Pickleball Tournament</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./fixtures.css" />
   </head>
   <body>
     <!-- Header -->
@@ -368,6 +369,78 @@
         <div class="modal-footer">
           <button class="btn btn-secondary modal-close">Hủy</button>
           <button class="btn btn-primary" id="save-team-btn">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Group Match Score Modal -->
+    <div id="group-match-score-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="group-score-modal-title">Cập nhật tỉ số</h3>
+          <button class="modal-close" onclick="app.closeGroupMatchModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="modal-group-match-team1" />
+          <input type="hidden" id="modal-group-match-team2" />
+          <input type="hidden" id="modal-group-match-group" />
+
+          <div class="match-teams-display">
+            <div class="team-display">
+              <span class="team-name-display" id="modal-group-team1-name"
+                >Team A</span
+              >
+              <span class="team-players-display" id="modal-group-team1-players"
+                >Người chơi 1 / Người chơi 2</span
+              >
+            </div>
+            <div class="vs-display">VS</div>
+            <div class="team-display">
+              <span class="team-name-display" id="modal-group-team2-name"
+                >Team B</span
+              >
+              <span class="team-players-display" id="modal-group-team2-players"
+                >Người chơi 3 / Người chơi 4</span
+              >
+            </div>
+          </div>
+
+          <div
+            class="form-group"
+            style="text-align: center; margin-top: 1.5rem"
+          >
+            <label>Nhập điểm số</label>
+            <div class="score-inputs-row">
+              <input
+                type="number"
+                id="modal-group-score1"
+                class="form-input score-input-large"
+                min="0"
+                placeholder="0"
+              />
+              <span class="score-separator">-</span>
+              <input
+                type="number"
+                id="modal-group-score2"
+                class="form-input score-input-large"
+                min="0"
+                placeholder="0"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="app.closeGroupMatchModal()"
+          >
+            Hủy
+          </button>
+          <button class="btn btn-primary" id="save-group-match-score-btn">
+            Lưu kết quả
+          </button>
         </div>
       </div>
     </div>

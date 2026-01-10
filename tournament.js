@@ -159,6 +159,56 @@ class TournamentManager {
     });
   }
 
+  // Save group match from modal
+  saveGroupMatchFromModal() {
+    const team1Id = document.getElementById("modal-group-match-team1").value;
+    const team2Id = document.getElementById("modal-group-match-team2").value;
+    const group = document.getElementById("modal-group-match-group").value;
+    const score1 = parseInt(
+      document.getElementById("modal-group-score1").value
+    );
+    const score2 = parseInt(
+      document.getElementById("modal-group-score2").value
+    );
+
+    if (!team1Id || !team2Id || !group || isNaN(score1) || isNaN(score2)) {
+      app.showMessage("Vui lòng điền đầy đủ điểm số!", "error");
+      return;
+    }
+
+    // Check if match already exists
+    const existingMatchIndex = this.matches.groupStage.findIndex(
+      (m) =>
+        m.group === group &&
+        ((m.team1 === team1Id && m.team2 === team2Id) ||
+          (m.team1 === team2Id && m.team2 === team1Id))
+    );
+
+    const matchData = {
+      group,
+      team1: team1Id,
+      team2: team2Id,
+      score1,
+      score2,
+      timestamp: Date.now(),
+    };
+
+    if (existingMatchIndex !== -1) {
+      this.matches.groupStage[existingMatchIndex] = matchData;
+    } else {
+      this.matches.groupStage.push(matchData);
+    }
+
+    this.updateTeamStats();
+    this.saveData();
+
+    // Close modal
+    app.closeGroupMatchModal();
+
+    app.showMessage("Đã lưu kết quả trận đấu!", "success");
+    app.renderGroupStandings();
+  }
+
   // Get group standings with proper ranking
   getGroupStandings(group) {
     const groupTeams = this.teams.filter((t) => t.group === group);

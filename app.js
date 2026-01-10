@@ -366,6 +366,33 @@ class TournamentApp {
       .join("");
   }
 
+  // Generate all round-robin fixtures for a group
+  generateGroupFixtures(group) {
+    const teams = tournament.teams.filter((t) => t.group === group);
+    const fixtures = [];
+
+    // Generate all unique pairings
+    for (let i = 0; i < teams.length; i++) {
+      for (let j = i + 1; j < teams.length; j++) {
+        fixtures.push({
+          team1: teams[i],
+          team2: teams[j],
+        });
+      }
+    }
+
+    return fixtures;
+  }
+
+  // Get match result if it exists
+  getMatchResult(team1Id, team2Id) {
+    return tournament.matches.groupStage.find(
+      (m) =>
+        (m.team1 === team1Id && m.team2 === team2Id) ||
+        (m.team1 === team2Id && m.team2 === team1Id)
+    );
+  }
+
   renderGroupStandings() {
     const content = document.getElementById("group-content");
 
@@ -422,8 +449,10 @@ class TournamentApp {
                 </div>
             `;
     } else {
-      // Render specific group standings
+      // Render specific group standings and fixtures
       const standings = tournament.getGroupStandings(this.currentGroup);
+      const fixtures = this.generateGroupFixtures(this.currentGroup);
+
       content.innerHTML = `
                 <div class="standings-table">
                     <table>
@@ -480,8 +509,160 @@ class TournamentApp {
                         </tbody>
                     </table>
                 </div>
+
+                ${
+                  fixtures.length > 0
+                    ? `
+                <div class="fixtures-section">
+                    <h3 class="fixtures-title">
+                        <span class="fixtures-icon">📅</span>
+                        Lịch thi đấu vòng bảng
+                    </h3>
+                    <div class="fixtures-grid">
+                        ${fixtures
+                          .map((fixture, idx) => {
+                            const match = this.getMatchResult(
+                              fixture.team1.id,
+                              fixture.team2.id
+                            );
+                            const hasScore =
+                              match &&
+                              match.score1 !== undefined &&
+                              match.score2 !== undefined;
+
+                            // Determine the correct display order
+                            let team1Display,
+                              team2Display,
+                              score1Display,
+                              score2Display;
+                            if (match) {
+                              if (match.team1 === fixture.team1.id) {
+                                team1Display = fixture.team1;
+                                team2Display = fixture.team2;
+                                score1Display = match.score1;
+                                score2Display = match.score2;
+                              } else {
+                                team1Display = fixture.team2;
+                                team2Display = fixture.team1;
+                                score1Display = match.score2;
+                                score2Display = match.score1;
+                              }
+                            } else {
+                              team1Display = fixture.team1;
+                              team2Display = fixture.team2;
+                              score1Display = "-";
+                              score2Display = "-";
+                            }
+
+                            return `
+                              <div class="fixture-card ${
+                                hasScore ? "has-score" : "no-score"
+                              }" 
+                                   onclick="app.openGroupMatchModal('${
+                                     fixture.team1.id
+                                   }', '${fixture.team2.id}', '${
+                              this.currentGroup
+                            }')">
+                                <div class="fixture-match-number">Trận ${
+                                  idx + 1
+                                }</div>
+                                <div class="fixture-teams">
+                                  <div class="fixture-team">
+                                    <div class="fixture-team-name">${
+                                      team1Display.name
+                                    }</div>
+                                    <div class="fixture-players">${this.getTeamDisplayName(
+                                      team1Display
+                                    )}</div>
+                                  </div>
+                                  <div class="fixture-score">
+                                    <div class="score-display ${
+                                      hasScore ? "completed" : "pending"
+                                    }">
+                                      <span class="score-number">${score1Display}</span>
+                                      <span class="score-separator">:</span>
+                                      <span class="score-number">${score2Display}</span>
+                                    </div>
+                                  </div>
+                                  <div class="fixture-team">
+                                    <div class="fixture-team-name">${
+                                      team2Display.name
+                                    }</div>
+                                    <div class="fixture-players">${this.getTeamDisplayName(
+                                      team2Display
+                                    )}</div>
+                                  </div>
+                                </div>
+                                <div class="fixture-edit-hint">
+                                  <span class="edit-icon">✏️</span>
+                                  ${
+                                    hasScore
+                                      ? "Nhấn để sửa"
+                                      : "Nhấn để nhập điểm"
+                                  }
+                                </div>
+                              </div>
+                            `;
+                          })
+                          .join("")}
+                    </div>
+                </div>
+                `
+                    : ""
+                }
             `;
     }
+  }
+
+  // Open modal for group match score editing
+  openGroupMatchModal(team1Id, team2Id, group) {
+    const modal = document.getElementById("group-match-score-modal");
+    const team1 = tournament.teams.find((t) => t.id === team1Id);
+    const team2 = tournament.teams.find((t) => t.id === team2Id);
+
+    if (!team1 || !team2) return;
+
+    // Set hidden inputs
+    document.getElementById("modal-group-match-team1").value = team1Id;
+    document.getElementById("modal-group-match-team2").value = team2Id;
+    document.getElementById("modal-group-match-group").value = group;
+
+    // Set UI elements
+    document.getElementById(
+      "group-score-modal-title"
+    ).textContent = `Cập nhật tỉ số - Bảng ${group}`;
+    document.getElementById("modal-group-team1-name").textContent = team1.name;
+    document.getElementById("modal-group-team1-players").textContent =
+      this.getTeamDisplayName(team1);
+    document.getElementById("modal-group-team2-name").textContent = team2.name;
+    document.getElementById("modal-group-team2-players").textContent =
+      this.getTeamDisplayName(team2);
+
+    // Load existing scores if any
+    const match = this.getMatchResult(team1Id, team2Id);
+    if (match) {
+      if (match.team1 === team1Id) {
+        document.getElementById("modal-group-score1").value =
+          match.score1 || "";
+        document.getElementById("modal-group-score2").value =
+          match.score2 || "";
+      } else {
+        document.getElementById("modal-group-score1").value =
+          match.score2 || "";
+        document.getElementById("modal-group-score2").value =
+          match.score1 || "";
+      }
+    } else {
+      document.getElementById("modal-group-score1").value = "";
+      document.getElementById("modal-group-score2").value = "";
+    }
+
+    modal.classList.add("active");
+
+    // Focus on first input
+    setTimeout(() => {
+      document.getElementById("modal-group-score1").focus();
+    }, 100);
   }
 
   showMessage(text, type = "success") {
@@ -556,6 +737,12 @@ class TournamentApp {
       this.showMessage("Đã đặt lại tất cả điểm số!", "success");
     }
   }
+  // Close group match score modal
+  closeGroupMatchModal() {
+    document
+      .getElementById("group-match-score-modal")
+      .classList.remove("active");
+  }
 }
 
 // Match Modal Functions
@@ -605,6 +792,16 @@ document.addEventListener("DOMContentLoaded", () => {
   if (saveMatchScoreBtn) {
     saveMatchScoreBtn.addEventListener("click", () => {
       tournament.saveKnockoutMatchFromModal();
+    });
+  }
+
+  // Add event listener for group match score modal save button
+  const saveGroupMatchScoreBtn = document.getElementById(
+    "save-group-match-score-btn"
+  );
+  if (saveGroupMatchScoreBtn) {
+    saveGroupMatchScoreBtn.addEventListener("click", () => {
+      tournament.saveGroupMatchFromModal();
     });
   }
 });
