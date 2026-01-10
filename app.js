@@ -78,6 +78,12 @@ class TournamentApp {
       });
 
     document
+      .getElementById("knockout-match")
+      ?.addEventListener("change", (e) => {
+        this.loadExistingMatchScore(e.target.value);
+      });
+
+    document
       .getElementById("save-knockout-btn")
       ?.addEventListener("click", () => {
         tournament.saveKnockoutMatch();
@@ -240,6 +246,41 @@ class TournamentApp {
     }
 
     matchSelect.innerHTML = '<option value="">Chọn trận đấu</option>' + options;
+  }
+
+  loadExistingMatchScore(matchIndex) {
+    const stage = document.getElementById("knockout-stage").value;
+    const score1Input = document.getElementById("knockout-score1");
+    const score2Input = document.getElementById("knockout-score2");
+
+    if (!stage || matchIndex === "") {
+      score1Input.value = "";
+      score2Input.value = "";
+      return;
+    }
+
+    const idx = parseInt(matchIndex);
+    let matchData = null;
+
+    if (stage === "quarterfinal") {
+      matchData = tournament.matches.knockout.quarterfinals[idx];
+    } else if (stage === "semifinal") {
+      matchData = tournament.matches.knockout.semifinals[idx];
+    } else if (stage === "final") {
+      matchData = tournament.matches.knockout.final;
+    }
+
+    if (
+      matchData &&
+      matchData.score1 !== undefined &&
+      matchData.score2 !== undefined
+    ) {
+      score1Input.value = matchData.score1;
+      score2Input.value = matchData.score2;
+    } else {
+      score1Input.value = "";
+      score2Input.value = "";
+    }
   }
 
   render() {
@@ -517,8 +558,53 @@ class TournamentApp {
   }
 }
 
+// Match Modal Functions
+function openMatchModal(
+  stage,
+  index,
+  label,
+  team1Name,
+  team2Name,
+  score1,
+  score2
+) {
+  const modal = document.getElementById("match-score-modal");
+
+  // Set hidden inputs
+  document.getElementById("modal-match-stage").value = stage;
+  document.getElementById("modal-match-index").value = index;
+
+  // Set UI elements
+  document.getElementById("score-modal-title").textContent = label;
+  document.getElementById("modal-team1-name").textContent = team1Name;
+  document.getElementById("modal-team2-name").textContent = team2Name;
+
+  // Set scores (empty string becomes empty input)
+  document.getElementById("modal-score1").value = score1 || "";
+  document.getElementById("modal-score2").value = score2 || "";
+
+  modal.classList.add("active");
+
+  // Focus on first input
+  setTimeout(() => {
+    document.getElementById("modal-score1").focus();
+  }, 100);
+}
+
+function closeMatchModal() {
+  document.getElementById("match-score-modal").classList.remove("active");
+}
+
 // Initialize app when DOM is ready
 let app;
 document.addEventListener("DOMContentLoaded", () => {
   app = new TournamentApp();
+
+  // Add event listener for match score modal save button
+  const saveMatchScoreBtn = document.getElementById("save-match-score-btn");
+  if (saveMatchScoreBtn) {
+    saveMatchScoreBtn.addEventListener("click", () => {
+      tournament.saveKnockoutMatchFromModal();
+    });
+  }
 });

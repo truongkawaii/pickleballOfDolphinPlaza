@@ -294,6 +294,64 @@ class TournamentManager {
     bracketManager.render();
   }
 
+  saveKnockoutMatchFromModal() {
+    const stage = document.getElementById("modal-match-stage").value;
+    const matchIndex = parseInt(
+      document.getElementById("modal-match-index").value
+    );
+    const score1 = parseInt(document.getElementById("modal-score1").value);
+    const score2 = parseInt(document.getElementById("modal-score2").value);
+
+    if (!stage || isNaN(matchIndex) || isNaN(score1) || isNaN(score2)) {
+      app.showMessage("Vui lòng điền đầy đủ điểm số!", "error");
+      return;
+    }
+
+    // Validate score based on stage
+    const isValid = this.validateKnockoutScore(stage, score1, score2);
+    if (!isValid) {
+      return;
+    }
+
+    const matchData = {
+      score1,
+      score2,
+      winner: score1 > score2 ? "team1" : "team2",
+      timestamp: Date.now(),
+    };
+
+    if (stage === "quarterfinal") {
+      if (!this.matches.knockout.quarterfinals[matchIndex]) {
+        this.matches.knockout.quarterfinals[matchIndex] = {};
+      }
+      this.matches.knockout.quarterfinals[matchIndex] = {
+        ...this.matches.knockout.quarterfinals[matchIndex],
+        ...matchData,
+      };
+    } else if (stage === "semifinal") {
+      if (!this.matches.knockout.semifinals[matchIndex]) {
+        this.matches.knockout.semifinals[matchIndex] = {};
+      }
+      this.matches.knockout.semifinals[matchIndex] = {
+        ...this.matches.knockout.semifinals[matchIndex],
+        ...matchData,
+      };
+    } else if (stage === "final") {
+      this.matches.knockout.final = {
+        ...this.matches.knockout.final,
+        ...matchData,
+      };
+    }
+
+    this.saveData();
+
+    // Close modal
+    closeMatchModal();
+
+    app.showMessage("Đã lưu kết quả!", "success");
+    bracketManager.render();
+  }
+
   validateKnockoutScore(stage, score1, score2) {
     const diff = Math.abs(score1 - score2);
 

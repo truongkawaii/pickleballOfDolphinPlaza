@@ -714,6 +714,85 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+.bracket-match.clickable {
+  cursor: pointer;
+  position: relative;
+}
+
+.bracket-match.clickable::after {
+  content: "✎";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.bracket-match.clickable:hover::after {
+  opacity: 1;
+  color: var(--accent-solid);
+}
+
+/* Match Score Modal Styles */
+.match-teams-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+}
+
+.team-display {
+  flex: 1;
+  text-align: center;
+}
+
+.team-name-display {
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: block;
+  color: var(--text-primary);
+}
+
+.vs-display {
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--accent-solid);
+  margin: 0 1rem;
+}
+
+.score-inputs-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
+.score-input-large {
+  width: 90px;
+  height: 70px;
+  font-size: 2.5rem;
+  text-align: center;
+  font-weight: 700;
+  padding: 0;
+  background: var(--bg-light);
+  border: 2px solid var(--border-color);
+}
+
+.score-input-large:focus {
+  border-color: var(--accent-solid);
+  box-shadow: 0 0 0 3px rgba(67, 233, 123, 0.2);
+}
+
+.score-separator {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
 .bracket-team {
   display: flex;
   justify-content: space-between;

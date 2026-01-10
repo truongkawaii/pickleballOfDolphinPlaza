@@ -117,6 +117,8 @@ class BracketManager {
       team2: this.qualifiedTeams[7],
       matchData: matches[0],
       label: "TK1: Hạng 1 vs Hạng 8",
+      stage: "quarterfinal",
+      index: 0,
     });
 
     // QF2: Rank 2 vs Rank 7
@@ -125,6 +127,8 @@ class BracketManager {
       team2: this.qualifiedTeams[6],
       matchData: matches[1],
       label: "TK2: Hạng 2 vs Hạng 7",
+      stage: "quarterfinal",
+      index: 1,
     });
 
     // QF3: Rank 3 vs Rank 6
@@ -133,6 +137,8 @@ class BracketManager {
       team2: this.qualifiedTeams[5],
       matchData: matches[2],
       label: "TK3: Hạng 3 vs Hạng 6",
+      stage: "quarterfinal",
+      index: 2,
     });
 
     // QF4: Rank 4 vs Rank 5
@@ -141,6 +147,8 @@ class BracketManager {
       team2: this.qualifiedTeams[4],
       matchData: matches[3],
       label: "TK4: Hạng 4 vs Hạng 5",
+      stage: "quarterfinal",
+      index: 3,
     });
 
     return qf;
@@ -160,6 +168,8 @@ class BracketManager {
       team2: qf4Winner,
       matchData: matches[0],
       label: "BK1: Thắng TK1 vs Thắng TK4",
+      stage: "semifinal",
+      index: 0,
     });
 
     // SF2: Winner QF2 vs Winner QF3
@@ -171,6 +181,8 @@ class BracketManager {
       team2: qf3Winner,
       matchData: matches[1],
       label: "BK2: Thắng TK2 vs Thắng TK3",
+      stage: "semifinal",
+      index: 1,
     });
 
     return sf;
@@ -186,6 +198,8 @@ class BracketManager {
       team2: sf2Winner,
       matchData: tournament.matches.knockout.final,
       label: "Chung kết",
+      stage: "final",
+      index: 0,
     };
   }
 
@@ -208,21 +222,36 @@ class BracketManager {
     const team1Winner = matchData.winner === "team1";
     const team2Winner = matchData.winner === "team2";
 
+    // Check if both teams are known (not ???)
+    const isClickable = team1.name !== "???" && team2.name !== "???";
+
+    // Prepare team names for display (use full names with players)
+    const team1Display = this.getTeamDisplayName(team1);
+    const team2Display = this.getTeamDisplayName(team2);
+
+    // Prepare onclick handler with all necessary data
+    const onclickAttr = isClickable
+      ? `onclick="openMatchModal('${match.stage}', ${match.index}, '${
+          match.label
+        }', '${team1Display.replace(/'/g, "\\'")}', '${team2Display.replace(
+          /'/g,
+          "\\'"
+        )}', '${matchData.score1 || ""}', '${matchData.score2 || ""}')"`
+      : "";
+
     return `
-            <div class="bracket-match" data-match="${id}">
+            <div class="bracket-match ${
+              isClickable ? "clickable" : ""
+            }" data-match="${id}" ${onclickAttr}>
                 <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; text-align: center;">
                     ${match.label}
                 </div>
                 <div class="bracket-team ${team1Winner ? "winner" : ""}">
-                    <span class="bracket-team-name">${this.getTeamDisplayName(
-                      team1
-                    )}</span>
+                    <span class="bracket-team-name">${team1Display}</span>
                     <span class="bracket-score">${score1}</span>
                 </div>
                 <div class="bracket-team ${team2Winner ? "winner" : ""}">
-                    <span class="bracket-team-name">${this.getTeamDisplayName(
-                      team2
-                    )}</span>
+                    <span class="bracket-team-name">${team2Display}</span>
                     <span class="bracket-score">${score2}</span>
                 </div>
             </div>
