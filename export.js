@@ -172,9 +172,36 @@ class ExportManager {
     app.showMessage("Đã tải xuống file TXT!", "success");
   }
 
-  exportToPDF() {
+  async exportToPDF() {
+    app.showMessage("Đang tạo PDF... Vui lòng đợi", "info");
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
+    try {
+      // Load fonts for Vietnamese support
+      const fontBaseURL =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto";
+
+      const [fontRegular, fontBold] = await Promise.all([
+        this.loadFont(`${fontBaseURL}/Roboto-Regular.ttf`),
+        this.loadFont(`${fontBaseURL}/Roboto-Medium.ttf`),
+      ]);
+
+      doc.addFileToVFS("Roboto-Regular.ttf", fontRegular);
+      doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+
+      doc.addFileToVFS("Roboto-Bold.ttf", fontBold);
+      doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
+
+      doc.setFont("Roboto", "normal");
+    } catch (error) {
+      console.error("Lỗi tải font:", error);
+      app.showMessage(
+        "Lỗi tải phông chữ. PDF có thể bị lỗi hiển thị.",
+        "error"
+      );
+    }
 
     let y = 20;
     const lineHeight = 7;
@@ -187,7 +214,8 @@ class ExportManager {
         y = 20;
       }
       doc.setFontSize(fontSize);
-      doc.setFont("helvetica", style);
+      // Ensure we stick to our custom font
+      doc.setFont("Roboto", style);
       doc.text(text, x, y);
       y += lineHeight * (fontSize / 10);
     };
@@ -305,7 +333,7 @@ class ExportManager {
         const winner = bracketManager.getMatchWinner(final);
         if (winner.name !== "???") {
           y += 3;
-          doc.setTextColor(255, 215, 0);
+          doc.setTextColor(255, 215, 0); // Gold
           addText(`VÔ ĐỊCH: ${winner.name}`, 20, 14, "bold");
           doc.setTextColor(0);
         }
@@ -315,6 +343,24 @@ class ExportManager {
     // Save PDF
     doc.save(`dolphin-plaza-tournament-${Date.now()}.pdf`);
     app.showMessage("Đã tải xuống file PDF!", "success");
+  }
+
+  // Optimize usage: fetch font as arraybuffer then convert to binary string (latin1) to minimize size overhead vs Base64 if possible,
+  // but VFS expects Base64 or string. Binary string is standard for pdfmake/jspdf adds.
+  async loadFont(url) {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    return this.arrayBufferToBase64(buffer);
+  }
+
+  arrayBufferToBase64(buffer) {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
   }
 }
 
