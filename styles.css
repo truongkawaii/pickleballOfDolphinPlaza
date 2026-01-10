@@ -1160,8 +1160,8 @@ body {
   /* Show the big logo in the view content */
   .mobile-view-logo {
     display: inline-block;
-    width: 100px;
-    height: 100px;
+    width: 60px;
+    height: 60px;
     object-fit: cover;
     border-radius: 50%;
     border: 3px solid var(--primary-solid);
