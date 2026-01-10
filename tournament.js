@@ -54,6 +54,18 @@ class TournamentManager {
     this.saveData();
   }
 
+  resetMatches() {
+    this.matches = {
+      groupStage: [],
+      knockout: {
+        quarterfinals: [],
+        semifinals: [],
+        final: null,
+      },
+    };
+    this.updateTeamStats();
+  }
+
   // Group Stage Match Management
   saveGroupMatch() {
     const group = document.getElementById("match-group").value;

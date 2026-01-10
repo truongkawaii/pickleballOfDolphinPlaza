@@ -384,6 +384,11 @@ body {
   background: var(--bg-card-hover);
 }
 
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
 /* Group Tabs */
 .group-tabs {
   display: flex;

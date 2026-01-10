@@ -91,6 +91,10 @@ class TournamentApp {
     document.getElementById("export-pdf-btn")?.addEventListener("click", () => {
       exportManager.exportToPDF();
     });
+
+    document
+      .getElementById("reset-scores-btn")
+      ?.addEventListener("click", () => this.resetScores());
   }
 
   switchView(view) {
@@ -496,6 +500,19 @@ class TournamentApp {
       };
       this.render();
       this.showMessage("Đã xóa tất cả dữ liệu!", "success");
+    }
+  }
+
+  resetScores() {
+    if (
+      confirm(
+        "Bạn có chắc chắn muốn đặt lại tất cả điểm số? Các đội vẫn sẽ được giữ lại."
+      )
+    ) {
+      tournament.resetMatches();
+      this.saveToStorage();
+      this.render();
+      this.showMessage("Đã đặt lại tất cả điểm số!", "success");
     }
   }
 }
