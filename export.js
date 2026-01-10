@@ -362,6 +362,198 @@ class ExportManager {
     }
     return window.btoa(binary);
   }
+
+  // Export Results to TXT (detailed group stage matches)
+  exportResultsToTXT() {
+    let content = "";
+
+    // Header
+    content += "═══════════════════════════════════════════════════════\n";
+    content += "     KẾT QUẢ CHI TIẾT VÒNG BẢNG\n";
+    content += "     DOLPHIN PLAZA PICKLEBALL TOURNAMENT 2026\n";
+    content += "═══════════════════════════════════════════════════════\n\n";
+
+    content += `Xuất lúc: ${new Date().toLocaleString("vi-VN")}\n`;
+    content += `Tổng số trận đấu: ${tournament.matches.groupStage.length}\n\n`;
+
+    const groups = ["A", "B", "C", "D", "E"];
+
+    groups.forEach((group) => {
+      const groupMatches = tournament.matches.groupStage.filter(
+        (m) => m.group === group
+      );
+
+      if (groupMatches.length > 0) {
+        content += `┌─ BẢNG ${group} ─────────────────────────────────────────┐\n`;
+        content += `│ Số trận: ${groupMatches.length}                                      │\n`;
+        content += `└──────────────────────────────────────────────────────┘\n\n`;
+
+        groupMatches.forEach((match, idx) => {
+          const team1 = tournament.teams.find((t) => t.id === match.team1);
+          const team2 = tournament.teams.find((t) => t.id === match.team2);
+
+          if (team1 && team2) {
+            const date = new Date(match.timestamp).toLocaleDateString("vi-VN");
+            content += `  Trận ${idx + 1} - ${date}\n`;
+            content += `  ─────────────────────────────────────────────────\n`;
+            content += `  ${team1.name.padEnd(25)} ${match.score1
+              .toString()
+              .padStart(2)}\n`;
+            content += `    (${app.getTeamDisplayName(team1)})\n`;
+            content += `  ${team2.name.padEnd(25)} ${match.score2
+              .toString()
+              .padStart(2)}\n`;
+            content += `    (${app.getTeamDisplayName(team2)})\n`;
+
+            const winner =
+              match.score1 > match.score2 ? team1.name : team2.name;
+            content += `  → Thắng: ${winner}\n\n`;
+          }
+        });
+
+        content += "\n";
+      }
+    });
+
+    // Footer
+    content += "═══════════════════════════════════════════════════════\n";
+    content += "           HẾT KẾT QUẢ VÒNG BẢNG\n";
+    content += "═══════════════════════════════════════════════════════\n";
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `ket-qua-vong-bang-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    app.showMessage("Đã tải xuống kết quả vòng bảng (TXT)!", "success");
+  }
+
+  // Export Results to PDF (detailed group stage matches)
+  async exportResultsToPDF() {
+    app.showMessage("Đang tạo PDF kết quả... Vui lòng đợi", "info");
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    try {
+      // Load fonts for Vietnamese support
+      const fontBaseURL =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/fonts/Roboto";
+
+      const [fontRegular, fontBold] = await Promise.all([
+        this.loadFont(`${fontBaseURL}/Roboto-Regular.ttf`),
+        this.loadFont(`${fontBaseURL}/Roboto-Medium.ttf`),
+      ]);
+
+      doc.addFileToVFS("Roboto-Regular.ttf", fontRegular);
+      doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+
+      doc.addFileToVFS("Roboto-Bold.ttf", fontBold);
+      doc.addFont("Roboto-Bold.ttf", "Roboto", "bold");
+
+      doc.setFont("Roboto", "normal");
+    } catch (error) {
+      console.error("Lỗi tải font:", error);
+    }
+
+    let y = 20;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Helper function to add text with page break
+    const addText = (text, x = 20, fontSize = 10, style = "normal") => {
+      if (y > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(fontSize);
+      doc.setFont("Roboto", style);
+      doc.text(text, x, y);
+      y += lineHeight * (fontSize / 10);
+    };
+
+    // Title
+    addText("KẾT QUẢ CHI TIẾT VÒNG BẢNG", 105, 16, "bold");
+    addText("DOLPHIN PLAZA PICKLEBALL TOURNAMENT 2026", 105, 12, "bold");
+    doc.setTextColor(100);
+    addText(`Xuất lúc: ${new Date().toLocaleString("vi-VN")}`, 105, 10);
+    doc.setTextColor(0);
+    y += 5;
+
+    addText(
+      `Tổng số trận: ${tournament.matches.groupStage.length}`,
+      20,
+      11,
+      "bold"
+    );
+    y += 5;
+
+    const groups = ["A", "B", "C", "D", "E"];
+
+    groups.forEach((group) => {
+      const groupMatches = tournament.matches.groupStage.filter(
+        (m) => m.group === group
+      );
+
+      if (groupMatches.length > 0) {
+        addText(`BẢNG ${group} - ${groupMatches.length} trận`, 20, 13, "bold");
+        y += 2;
+
+        groupMatches.forEach((match, idx) => {
+          const team1 = tournament.teams.find((t) => t.id === match.team1);
+          const team2 = tournament.teams.find((t) => t.id === match.team2);
+
+          if (team1 && team2) {
+            const date = new Date(match.timestamp).toLocaleDateString("vi-VN");
+
+            // Match number and date
+            doc.setTextColor(100);
+            addText(`Trận ${idx + 1} - ${date}`, 25, 9);
+            doc.setTextColor(0);
+
+            // Team 1
+            const team1Text = `${team1.name} - ${match.score1}`;
+            addText(
+              team1Text,
+              30,
+              11,
+              match.score1 > match.score2 ? "bold" : "normal"
+            );
+
+            doc.setTextColor(100);
+            addText(`(${app.getTeamDisplayName(team1)})`, 35, 8);
+            doc.setTextColor(0);
+
+            // Team 2
+            const team2Text = `${team2.name} - ${match.score2}`;
+            addText(
+              team2Text,
+              30,
+              11,
+              match.score2 > match.score1 ? "bold" : "normal"
+            );
+
+            doc.setTextColor(100);
+            addText(`(${app.getTeamDisplayName(team2)})`, 35, 8);
+            doc.setTextColor(0);
+
+            y += 2;
+          }
+        });
+
+        y += 3;
+      }
+    });
+
+    // Save PDF
+    doc.save(`ket-qua-vong-bang-${Date.now()}.pdf`);
+    app.showMessage("Đã tải xuống kết quả vòng bảng (PDF)!", "success");
+  }
 }
 
 const exportManager = new ExportManager();

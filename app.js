@@ -98,6 +98,19 @@ class TournamentApp {
       exportManager.exportToPDF();
     });
 
+    // Results export buttons
+    document
+      .getElementById("export-results-txt-btn")
+      ?.addEventListener("click", () => {
+        exportManager.exportResultsToTXT();
+      });
+
+    document
+      .getElementById("export-results-pdf-btn")
+      ?.addEventListener("click", () => {
+        exportManager.exportResultsToPDF();
+      });
+
     document
       .getElementById("reset-scores-btn")
       ?.addEventListener("click", () => this.resetScores());
@@ -294,10 +307,103 @@ class TournamentApp {
       case "bracket":
         bracketManager.render();
         break;
+      case "results":
+        this.renderResults();
+        break;
       case "export":
         exportManager.renderPreview();
         break;
     }
+  }
+
+  renderResults() {
+    const content = document.getElementById("results-content");
+    const groups = ["A", "B", "C", "D", "E"];
+
+    let html = '<div class="results-summary">';
+
+    groups.forEach((group) => {
+      const groupMatches = tournament.matches.groupStage.filter(
+        (m) => m.group === group
+      );
+
+      if (groupMatches.length > 0) {
+        html += `
+          <div class="results-group-section">
+            <h3 class="results-group-title">
+              <span class="group-badge">Bảng ${group}</span>
+              <span class="match-count">${groupMatches.length} trận đấu</span>
+            </h3>
+            <div class="results-matches-list">
+        `;
+
+        groupMatches.forEach((match, idx) => {
+          const team1 = tournament.teams.find((t) => t.id === match.team1);
+          const team2 = tournament.teams.find((t) => t.id === match.team2);
+
+          if (team1 && team2) {
+            const winner = match.score1 > match.score2 ? team1.id : team2.id;
+
+            html += `
+              <div class="result-match-card">
+                <div class="result-match-header">
+                  <span class="result-match-number">Trận ${idx + 1}</span>
+                  <span class="result-match-date">${new Date(
+                    match.timestamp
+                  ).toLocaleDateString("vi-VN")}</span>
+                </div>
+                <div class="result-match-body">
+                  <div class="result-team ${
+                    winner === team1.id ? "winner" : ""
+                  }">
+                    <div class="result-team-name">${team1.name}</div>
+                    <div class="result-team-players">${this.getTeamDisplayName(
+                      team1
+                    )}</div>
+                  </div>
+                  <div class="result-score">
+                    <span class="result-score-value ${
+                      match.score1 > match.score2 ? "winning" : ""
+                    }">${match.score1}</span>
+                    <span class="result-score-separator">:</span>
+                    <span class="result-score-value ${
+                      match.score2 > match.score1 ? "winning" : ""
+                    }">${match.score2}</span>
+                  </div>
+                  <div class="result-team ${
+                    winner === team2.id ? "winner" : ""
+                  }">
+                    <div class="result-team-name">${team2.name}</div>
+                    <div class="result-team-players">${this.getTeamDisplayName(
+                      team2
+                    )}</div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      }
+    });
+
+    // Check if no matches yet
+    if (tournament.matches.groupStage.length === 0) {
+      html += `
+        <div class="no-results">
+          <div class="no-results-icon">📊</div>
+          <h3>Chưa có kết quả</h3>
+          <p>Hãy nhập kết quả các trận đấu ở tab "Bảng xếp hạng"</p>
+        </div>
+      `;
+    }
+
+    html += "</div>";
+    content.innerHTML = html;
   }
 
   renderTeamSetup() {

@@ -6,6 +6,7 @@
     <title>Dolphin Plaza Pickleball Tournament</title>
     <link rel="stylesheet" href="./styles.css" />
     <link rel="stylesheet" href="./fixtures.css" />
+    <link rel="stylesheet" href="./results.css" />
   </head>
   <body>
     <!-- Header -->
@@ -30,6 +31,10 @@
           <button class="nav-tab" data-view="bracket">
             <span class="nav-icon">🏆</span>
             <span>Sơ đồ đấu</span>
+          </button>
+          <button class="nav-tab" data-view="results">
+            <span class="nav-icon">📋</span>
+            <span>Kết quả</span>
           </button>
           <button class="nav-tab" data-view="export">
             <span class="nav-icon">📥</span>
@@ -262,6 +267,35 @@
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <!-- Results View -->
+      <section id="results-view" class="view">
+        <div class="view-header">
+          <img
+            src="./logo.jpg"
+            alt="Logo"
+            width="60px"
+            class="mobile-view-logo"
+          />
+          <h2>Tổng hợp kết quả vòng bảng</h2>
+          <p class="subtitle">Danh sách tất cả các trận đấu</p>
+        </div>
+
+        <div id="results-content">
+          <!-- Results will be rendered here -->
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="export-results-txt-btn">
+            <span class="btn-icon">📄</span>
+            Xuất TXT
+          </button>
+          <button class="btn btn-primary" id="export-results-pdf-btn">
+            <span class="btn-icon">📕</span>
+            Xuất PDF
+          </button>
         </div>
       </section>
 
