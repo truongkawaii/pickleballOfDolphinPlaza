@@ -3,60 +3,287 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Thiên Mệnh - AI Fortune Teller</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Quicksand:wght@300..700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      body {
-        font-family: "Quicksand", sans-serif;
-        background-color: #020617;
-        color: #f8fafc;
-      }
-      h1,
-      h2,
-      h3,
-      .serif {
-        font-family: "Playfair Display", serif;
-      }
-      .mystic-gradient {
-        background: radial-gradient(circle at top right, #1e1b4b, #020617);
-      }
-      .gold-glow {
-        box-shadow: 0 0 15px rgba(234, 179, 8, 0.2);
-      }
-      /* Custom Scrollbar */
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(245, 158, 11, 0.3);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(245, 158, 11, 0.5);
-      }
-    </style>
-    <script type="importmap">
-      {
-        "imports": {
-          "react/": "https://esm.sh/react@^19.2.3/",
-          "react": "https://esm.sh/react@^19.2.3",
-          "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
-          "react-dom/": "https://esm.sh/react-dom@^19.2.3/"
-        }
-      }
-    </script>
-    <link rel="stylesheet" href="/index.css" />
+    <title>Dolphin Plaza Pickleball Tournament</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <div class="logo-icon">🏓</div>
+          <div class="logo-text">
+            <h1>Dolphin Plaza</h1>
+            <p>Pickleball Tournament 2026</p>
+          </div>
+        </div>
+        <nav class="nav-tabs">
+          <button class="nav-tab active" data-view="setup">
+            <span class="nav-icon">👥</span>
+            <span>Đội thi đấu</span>
+          </button>
+          <button class="nav-tab" data-view="groups">
+            <span class="nav-icon">📊</span>
+            <span>Bảng xếp hạng</span>
+          </button>
+          <button class="nav-tab" data-view="bracket">
+            <span class="nav-icon">🏆</span>
+            <span>Sơ đồ đấu</span>
+          </button>
+          <button class="nav-tab" data-view="export">
+            <span class="nav-icon">📥</span>
+            <span>Xuất kết quả</span>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+      <!-- Team Setup View -->
+      <section id="setup-view" class="view active">
+        <div class="view-header">
+          <h2>Thiết lập đội thi đấu</h2>
+          <p class="subtitle">40 người - 20 đội - 5 bảng (A, B, C, D, E)</p>
+        </div>
+
+        <div class="groups-container">
+          <!-- Groups will be rendered here -->
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="add-team-btn">
+            <span class="btn-icon">➕</span>
+            Thêm đội mới
+          </button>
+          <button class="btn btn-secondary" id="reset-teams-btn">
+            <span class="btn-icon">🔄</span>
+            Đặt lại tất cả
+          </button>
+        </div>
+      </section>
+
+      <!-- Group Standings View -->
+      <section id="groups-view" class="view">
+        <div class="view-header">
+          <h2>Bảng xếp hạng vòng bảng</h2>
+          <p class="subtitle">15 lượt thi đấu - Mỗi đội 3 trận</p>
+        </div>
+
+        <div class="group-tabs">
+          <button class="group-tab active" data-group="A">Bảng A</button>
+          <button class="group-tab" data-group="B">Bảng B</button>
+          <button class="group-tab" data-group="C">Bảng C</button>
+          <button class="group-tab" data-group="D">Bảng D</button>
+          <button class="group-tab" data-group="E">Bảng E</button>
+          <button class="group-tab" data-group="all">Tổng hợp</button>
+        </div>
+
+        <div id="group-content">
+          <!-- Group standings will be rendered here -->
+        </div>
+
+        <div class="match-entry-section">
+          <h3>Nhập kết quả trận đấu</h3>
+          <div class="match-form">
+            <select id="match-group" class="form-select">
+              <option value="">Chọn bảng</option>
+              <option value="A">Bảng A</option>
+              <option value="B">Bảng B</option>
+              <option value="C">Bảng C</option>
+              <option value="D">Bảng D</option>
+              <option value="E">Bảng E</option>
+            </select>
+            <select id="match-team1" class="form-select">
+              <option value="">Đội 1</option>
+            </select>
+            <input
+              type="number"
+              id="match-score1"
+              class="form-input"
+              placeholder="Điểm"
+              min="0"
+            />
+            <span class="vs-text">VS</span>
+            <select id="match-team2" class="form-select">
+              <option value="">Đội 2</option>
+            </select>
+            <input
+              type="number"
+              id="match-score2"
+              class="form-input"
+              placeholder="Điểm"
+              min="0"
+            />
+            <button class="btn btn-primary" id="save-match-btn">
+              Lưu kết quả
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bracket View -->
+      <section id="bracket-view" class="view">
+        <div class="view-header">
+          <h2>Sơ đồ vòng loại trực tiếp</h2>
+          <p class="subtitle">Tứ kết → Bán kết → Chung kết</p>
+        </div>
+
+        <div class="qualification-info">
+          <div class="info-card">
+            <h3>Đội vào vòng trong</h3>
+            <div id="qualified-teams-list">
+              <!-- Qualified teams will be displayed here -->
+            </div>
+          </div>
+        </div>
+
+        <div class="bracket-container" id="bracket-container">
+          <!-- Bracket will be rendered here -->
+        </div>
+
+        <div class="knockout-match-entry">
+          <h3>Nhập kết quả vòng loại</h3>
+          <div class="knockout-form">
+            <select id="knockout-stage" class="form-select">
+              <option value="">Chọn vòng đấu</option>
+              <option value="quarterfinal">Tứ kết</option>
+              <option value="semifinal">Bán kết</option>
+              <option value="final">Chung kết</option>
+            </select>
+            <select id="knockout-match" class="form-select">
+              <option value="">Chọn trận đấu</option>
+            </select>
+            <input
+              type="number"
+              id="knockout-score1"
+              class="form-input"
+              placeholder="Điểm đội 1"
+              min="0"
+            />
+            <span class="vs-text">VS</span>
+            <input
+              type="number"
+              id="knockout-score2"
+              class="form-input"
+              placeholder="Điểm đội 2"
+              min="0"
+            />
+            <button class="btn btn-primary" id="save-knockout-btn">
+              Lưu kết quả
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Export View -->
+      <section id="export-view" class="view">
+        <div class="view-header">
+          <h2>Xuất kết quả giải đấu</h2>
+          <p class="subtitle">Tải về dưới dạng TXT hoặc PDF</p>
+        </div>
+
+        <div class="export-options">
+          <div class="export-card">
+            <div class="export-icon">📄</div>
+            <h3>Xuất TXT</h3>
+            <p>Định dạng văn bản đơn giản, dễ đọc</p>
+            <button class="btn btn-primary" id="export-txt-btn">
+              <span class="btn-icon">⬇️</span>
+              Tải TXT
+            </button>
+          </div>
+          <div class="export-card">
+            <div class="export-icon">📕</div>
+            <h3>Xuất PDF</h3>
+            <p>Định dạng chuyên nghiệp, in ấn đẹp</p>
+            <button class="btn btn-primary" id="export-pdf-btn">
+              <span class="btn-icon">⬇️</span>
+              Tải PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="export-preview">
+          <h3>Xem trước kết quả</h3>
+          <div id="export-preview-content" class="preview-content">
+            <!-- Preview will be rendered here -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Team Modal -->
+    <div id="team-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-title">Thêm đội mới</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Tên đội</label>
+            <input
+              type="text"
+              id="team-name"
+              class="form-input"
+              placeholder="Nhập tên đội"
+            />
+          </div>
+          <div class="form-group">
+            <label>Bảng đấu</label>
+            <select id="team-group" class="form-select">
+              <option value="A">Bảng A</option>
+              <option value="B">Bảng B</option>
+              <option value="C">Bảng C</option>
+              <option value="D">Bảng D</option>
+              <option value="E">Bảng E</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Thành viên 1</label>
+            <div class="player-row">
+              <input
+                type="text"
+                id="player1-name"
+                class="form-input"
+                placeholder="Tên thành viên"
+              />
+              <select id="player1-gender" class="form-select">
+                <option value="M">Nam</option>
+                <option value="F">Nữ</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Thành viên 2</label>
+            <div class="player-row">
+              <input
+                type="text"
+                id="player2-name"
+                class="form-input"
+                placeholder="Tên thành viên"
+              />
+              <select id="player2-gender" class="form-select">
+                <option value="M">Nam</option>
+                <option value="F">Nữ</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary modal-close">Hủy</button>
+          <button class="btn btn-primary" id="save-team-btn">Lưu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+    <script src="tournament.js"></script>
+    <script src="bracket.js"></script>
+    <script src="export.js"></script>
   </body>
 </html>

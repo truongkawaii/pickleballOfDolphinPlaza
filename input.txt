@@ -1,3 +1,0 @@
-Mô tả: 
-Trang luận giải tử vi: 
-Đầu vào: Họ tên, ngày tháng năm  sinh, giờ sinh

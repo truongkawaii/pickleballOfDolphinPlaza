@@ -1,0 +1,321 @@
+// Export Manager
+class ExportManager {
+  constructor() {}
+
+  renderPreview() {
+    const content = this.generateTextContent();
+    document.getElementById("export-preview-content").textContent = content;
+  }
+
+  generateTextContent() {
+    let content = "";
+
+    // Header
+    content += "═══════════════════════════════════════════════════════\n";
+    content += "     DOLPHIN PLAZA PICKLEBALL TOURNAMENT 2026\n";
+    content += "═══════════════════════════════════════════════════════\n\n";
+
+    // Tournament Info
+    content += "📊 THÔNG TIN GIẢI ĐẤU\n";
+    content += "───────────────────────────────────────────────────────\n";
+    content += `Số đội tham gia: ${tournament.teams.length}/20\n`;
+    content += `Số trận vòng bảng: ${tournament.matches.groupStage.length}\n\n`;
+
+    // Group Stage Results
+    content += "🎾 KẾT QUẢ VÒNG BẢNG\n";
+    content += "═══════════════════════════════════════════════════════\n\n";
+
+    const groups = ["A", "B", "C", "D", "E"];
+    groups.forEach((group) => {
+      const standings = tournament.getGroupStandings(group);
+      if (standings.length === 0) return;
+
+      content += `┌─ BẢNG ${group} ─────────────────────────────────────────┐\n`;
+      content += `│ Hạng │ Đội                    │ T │ Th│ Ghi│HS  │\n`;
+      content += `├──────┼────────────────────────┼───┼───┼────┼────┤\n`;
+
+      standings.forEach((team, idx) => {
+        const rank = (idx + 1).toString().padEnd(5);
+        const name = team.name.padEnd(23).substring(0, 23);
+        const matches = (team.stats.wins + team.stats.losses)
+          .toString()
+          .padEnd(3);
+        const wins = team.stats.wins.toString().padEnd(3);
+        const pointsFor = team.stats.pointsFor.toString().padEnd(4);
+        const diff = (
+          team.stats.pointDiff >= 0
+            ? "+" + team.stats.pointDiff
+            : team.stats.pointDiff
+        )
+          .toString()
+          .padEnd(4);
+
+        content += `│ ${rank}│ ${name}│ ${matches}│ ${wins}│ ${pointsFor}│ ${diff}│\n`;
+      });
+
+      content += `└──────────────────────────────────────────────────────┘\n\n`;
+    });
+
+    // Qualified Teams
+    const qualified = tournament.getQualifiedTeams();
+    if (qualified.length >= 8) {
+      content += "🏆 ĐỘI VÀO VÒNG TRONG (8 đội)\n";
+      content += "═══════════════════════════════════════════════════════\n";
+
+      qualified.slice(0, 8).forEach((team, idx) => {
+        const label = idx < 5 ? "Nhất bảng" : "Nhì bảng (vé vớt)";
+        content += `${idx + 1}. ${team.name} (Bảng ${
+          team.group
+        } - ${label}) - ${team.stats.wins} thắng, +${team.stats.pointDiff}\n`;
+      });
+      content += "\n";
+
+      // Knockout Results
+      content += "🎯 KẾT QUẢ VÒNG LOẠI TRỰC TIẾP\n";
+      content += "═══════════════════════════════════════════════════════\n\n";
+
+      // Quarterfinals
+      content += "▸ TỨ KẾT\n";
+      content += "───────────────────────────────────────────────────────\n";
+      const quarterfinals = bracketManager.getQuarterfinals();
+      quarterfinals.forEach((match, idx) => {
+        const score1 =
+          match.matchData?.score1 !== undefined ? match.matchData.score1 : "-";
+        const score2 =
+          match.matchData?.score2 !== undefined ? match.matchData.score2 : "-";
+        const winner = match.matchData?.winner
+          ? match.matchData.winner === "team1"
+            ? match.team1.name
+            : match.team2.name
+          : "Chưa đấu";
+
+        content += `TK${idx + 1}: ${match.team1.name} ${score1} - ${score2} ${
+          match.team2.name
+        }`;
+        if (winner !== "Chưa đấu") content += ` → ${winner}`;
+        content += "\n";
+      });
+      content += "\n";
+
+      // Semifinals
+      if (tournament.matches.knockout.quarterfinals.length > 0) {
+        content += "▸ BÁN KẾT\n";
+        content += "───────────────────────────────────────────────────────\n";
+        const semifinals = bracketManager.getSemifinals();
+        semifinals.forEach((match, idx) => {
+          const team1Name = match.team1?.name || "???";
+          const team2Name = match.team2?.name || "???";
+          const score1 =
+            match.matchData?.score1 !== undefined
+              ? match.matchData.score1
+              : "-";
+          const score2 =
+            match.matchData?.score2 !== undefined
+              ? match.matchData.score2
+              : "-";
+          const winner = match.matchData?.winner
+            ? match.matchData.winner === "team1"
+              ? team1Name
+              : team2Name
+            : "Chưa đấu";
+
+          content += `BK${
+            idx + 1
+          }: ${team1Name} ${score1} - ${score2} ${team2Name}`;
+          if (winner !== "Chưa đấu") content += ` → ${winner}`;
+          content += "\n";
+        });
+        content += "\n";
+      }
+
+      // Final
+      if (tournament.matches.knockout.semifinals.length > 0) {
+        content += "▸ CHUNG KẾT\n";
+        content += "───────────────────────────────────────────────────────\n";
+        const final = bracketManager.getFinal();
+        const team1Name = final.team1?.name || "???";
+        const team2Name = final.team2?.name || "???";
+        const score1 =
+          final.matchData?.score1 !== undefined ? final.matchData.score1 : "-";
+        const score2 =
+          final.matchData?.score2 !== undefined ? final.matchData.score2 : "-";
+        const winner = bracketManager.getMatchWinner(final);
+
+        content += `${team1Name} ${score1} - ${score2} ${team2Name}\n`;
+        if (winner.name !== "???") {
+          content += `\n🏆 VÔ ĐỊCH: ${winner.name}\n`;
+        }
+        content += "\n";
+      }
+    }
+
+    // Footer
+    content += "═══════════════════════════════════════════════════════\n";
+    content += `Xuất lúc: ${new Date().toLocaleString("vi-VN")}\n`;
+    content += "═══════════════════════════════════════════════════════\n";
+
+    return content;
+  }
+
+  exportToTXT() {
+    const content = this.generateTextContent();
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `dolphin-plaza-tournament-${Date.now()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    app.showMessage("Đã tải xuống file TXT!", "success");
+  }
+
+  exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    let y = 20;
+    const lineHeight = 7;
+    const pageHeight = doc.internal.pageSize.height;
+
+    // Helper function to add text with page break
+    const addText = (text, x = 20, fontSize = 10, style = "normal") => {
+      if (y > pageHeight - 20) {
+        doc.addPage();
+        y = 20;
+      }
+      doc.setFontSize(fontSize);
+      doc.setFont("helvetica", style);
+      doc.text(text, x, y);
+      y += lineHeight * (fontSize / 10);
+    };
+
+    // Title
+    addText("DOLPHIN PLAZA PICKLEBALL TOURNAMENT 2026", 105, 16, "bold");
+    doc.setTextColor(100);
+    addText(`Xuất lúc: ${new Date().toLocaleString("vi-VN")}`, 105, 10);
+    doc.setTextColor(0);
+    y += 5;
+
+    // Tournament Info
+    addText(`Số đội tham gia: ${tournament.teams.length}/20`, 20, 11, "bold");
+    addText(
+      `Số trận vòng bảng: ${tournament.matches.groupStage.length}`,
+      20,
+      11,
+      "bold"
+    );
+    y += 5;
+
+    // Group Stage
+    addText("KẾT QUẢ VÒNG BẢNG", 20, 14, "bold");
+    y += 3;
+
+    const groups = ["A", "B", "C", "D", "E"];
+    groups.forEach((group) => {
+      const standings = tournament.getGroupStandings(group);
+      if (standings.length === 0) return;
+
+      addText(`Bảng ${group}`, 20, 12, "bold");
+
+      standings.forEach((team, idx) => {
+        const text = `${idx + 1}. ${team.name} - ${team.stats.wins} thắng, ${
+          team.stats.pointDiff > 0 ? "+" : ""
+        }${team.stats.pointDiff} HS`;
+        addText(text, 25, 10);
+      });
+
+      y += 3;
+    });
+
+    // Qualified Teams
+    const qualified = tournament.getQualifiedTeams();
+    if (qualified.length >= 8) {
+      y += 5;
+      addText("ĐỘI VÀO VÒNG TRONG (8 đội)", 20, 14, "bold");
+      y += 3;
+
+      qualified.slice(0, 8).forEach((team, idx) => {
+        const label = idx < 5 ? "Nhất bảng" : "Nhì bảng";
+        addText(
+          `${idx + 1}. ${team.name} (Bảng ${team.group} - ${label})`,
+          25,
+          10
+        );
+      });
+
+      // Knockout Results
+      y += 5;
+      addText("VÒNG LOẠI TRỰC TIẾP", 20, 14, "bold");
+      y += 3;
+
+      // Quarterfinals
+      addText("Tứ kết", 20, 12, "bold");
+      const quarterfinals = bracketManager.getQuarterfinals();
+      quarterfinals.forEach((match, idx) => {
+        const score1 =
+          match.matchData?.score1 !== undefined ? match.matchData.score1 : "-";
+        const score2 =
+          match.matchData?.score2 !== undefined ? match.matchData.score2 : "-";
+        const text = `TK${idx + 1}: ${match.team1.name} ${score1} - ${score2} ${
+          match.team2.name
+        }`;
+        addText(text, 25, 10);
+      });
+
+      // Semifinals
+      if (tournament.matches.knockout.quarterfinals.some((m) => m.winner)) {
+        y += 3;
+        addText("Bán kết", 20, 12, "bold");
+        const semifinals = bracketManager.getSemifinals();
+        semifinals.forEach((match, idx) => {
+          const team1Name = match.team1?.name || "???";
+          const team2Name = match.team2?.name || "???";
+          const score1 =
+            match.matchData?.score1 !== undefined
+              ? match.matchData.score1
+              : "-";
+          const score2 =
+            match.matchData?.score2 !== undefined
+              ? match.matchData.score2
+              : "-";
+          const text = `BK${
+            idx + 1
+          }: ${team1Name} ${score1} - ${score2} ${team2Name}`;
+          addText(text, 25, 10);
+        });
+      }
+
+      // Final
+      if (tournament.matches.knockout.semifinals.some((m) => m.winner)) {
+        y += 3;
+        addText("Chung kết", 20, 12, "bold");
+        const final = bracketManager.getFinal();
+        const team1Name = final.team1?.name || "???";
+        const team2Name = final.team2?.name || "???";
+        const score1 =
+          final.matchData?.score1 !== undefined ? final.matchData.score1 : "-";
+        const score2 =
+          final.matchData?.score2 !== undefined ? final.matchData.score2 : "-";
+        const text = `${team1Name} ${score1} - ${score2} ${team2Name}`;
+        addText(text, 25, 10);
+
+        const winner = bracketManager.getMatchWinner(final);
+        if (winner.name !== "???") {
+          y += 3;
+          doc.setTextColor(255, 215, 0);
+          addText(`VÔ ĐỊCH: ${winner.name}`, 20, 14, "bold");
+          doc.setTextColor(0);
+        }
+      }
+    }
+
+    // Save PDF
+    doc.save(`dolphin-plaza-tournament-${Date.now()}.pdf`);
+    app.showMessage("Đã tải xuống file PDF!", "success");
+  }
+}
+
+const exportManager = new ExportManager();

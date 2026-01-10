@@ -1,0 +1,149 @@
+Lượt 1 Bảng A	Đội 01:	Đào Huy Hiếu
+		Phạm Xuân Kiển
+	Đội 02:	Tăng Phúc Minh
+		Trần Thanh Bình
+		
+Lượt 1 Bảng A	Đội 03:	Phạm Phú Yên
+		Đỗ Hương
+	Đội 04:	Cấn Minh Đức
+		Phạm Hùng Cường
+		
+Lượt 2 Bảng A	Đội 01:	Đào Huy Hiếu
+		Phạm Xuân Kiển
+	Đội 03:	Phạm Phú Yên
+		Đỗ Hương
+		
+Lượt 2 Bảng A	Đội 02:	Tăng Phúc Minh
+		Trần Thanh Bình
+	Đội 04:	Cấn Minh Đức
+		Phạm Hùng Cường
+		
+Lượt 3 Bảng A	Đội 01:	Đào Huy Hiếu
+		Phạm Xuân Kiển
+	Đội 04:	Cấn Minh Đức
+		Phạm Hùng Cường
+		
+Lượt 3 Bảng A	Đội 02:	Tăng Phúc Minh
+		Trần Thanh Bình
+	Đội 03:	Phạm Phú Yên
+		Đỗ Hương
+		
+Lượt 1 Bảng B	Đội 05:	Lê Trung Lợi
+		Vũ Thế Phúc
+	Đội 06:	Bùi Văn Loan
+		Trần Minh Nguyệt
+		
+Lượt 1 Bảng B	Đội 07:	Nguyễn Chí Hiếu
+		Nguyễn Tuấn Hưng
+	Đội 08:	Nguyễn Hoàng Công
+		Nguyễn Xuân Bách
+		
+Lượt 2 Bảng B	Đội 05:	Lê Trung Lợi
+		Vũ Thế Phúc
+	Đội 07:	Nguyễn Chí Hiếu
+		Nguyễn Tuấn Hưng
+		
+Lượt 2 Bảng B	Đội 06:	Bùi Văn Loan
+		Trần Minh Nguyệt
+	Đội 08:	Nguyễn Hoàng Công
+		Nguyễn Xuân Bách
+		
+Lượt 3 Bảng B	Đội 05:	Lê Trung Lợi
+		Vũ Thế Phúc
+	Đội 08:	Nguyễn Hoàng Công
+		Nguyễn Xuân Bách
+		
+Lượt 3 Bảng B	Đội 06:	Bùi Văn Loan
+		Trần Minh Nguyệt
+	Đội 07:	Nguyễn Chí Hiếu
+		Nguyễn Tuấn Hưng
+		
+Lượt 1 Bảng C	Đội 09:	Trần Văn Lợi
+		Bùi Bình Minh
+	Đội 10:	Hoàng Mạnh Hùng
+		Lê Đức Thọ
+		
+Lượt 1 Bảng C	Đội 11:	Đào Viết Cường
+		Nguyễn Khánh Linh
+	Đội 12:	Phạm Văn Sáng
+		Nguyễn Phương Dung
+		
+Lượt 2 Bảng C	Đội 09:	Trần Văn Lợi
+		Bùi Bình Minh
+	Đội 11:	Đào Viết Cường
+		Nguyễn Khánh Linh
+		
+Lượt 2 Bảng C	Đội 10:	Hoàng Mạnh Hùng
+		Lê Đức Thọ
+	Đội 12:	Phạm Văn Sáng
+		Nguyễn Phương Dung
+		
+Lượt 3 Bảng C	Đội 09:	Trần Văn Lợi
+		Bùi Bình Minh
+	Đội 12:	Phạm Văn Sáng
+		Nguyễn Phương Dung
+		
+Lượt 3 Bảng C	Đội 10:	Hoàng Mạnh Hùng
+		Lê Đức Thọ
+	Đội 11:	Đào Viết Cường
+		Nguyễn Khánh Linh
+		
+Lượt 1 Bảng D	Đội 13:	Tăng Hoàng Bảo
+		Vũ Hồng Quảng
+	Đội 14:	Đinh Thế Mạnh
+		Phương Anh
+		
+Lượt 1 Bảng D	Đội 15:	Phùng Quang Huy
+		Lê Văn Phúc
+	Đội 16:	Trần Tùng
+		Nguyễn Đức Hoan
+		
+Lượt 2 Bảng D	Đội 13:	Tăng Hoàng Bảo
+		Vũ Hồng Quảng
+	Đội 15:	Phùng Quang Huy
+		Lê Văn Phúc
+		
+Lượt 2 Bảng D	Đội 14:	Đinh Thế Mạnh
+		Phương Anh
+	Đội 16:	Trần Tùng
+		Nguyễn Đức Hoan
+		
+Lượt 3 Bảng D	Đội 13:	Tăng Hoàng Bảo
+		Vũ Hồng Quảng
+	Đội 16:	Trần Tùng
+		Nguyễn Đức Hoan
+		
+Lượt 3 Bảng D	Đội 14:	Đinh Thế Mạnh
+		Phương Anh
+	Đội 15:	Phùng Quang Huy
+		Lê Văn Phúc
+		
+Lượt 1 Bảng E	Đội 17:	Nguyễn Ngọc Thắng
+		Hà Phương
+	Đội 18:	Vũ Xuân Thịnh
+		Nguyễn Tất Tâm
+		
+Lượt 1 Bảng E	Đội 19:	Tuấn Anh
+		Nguyễn Cúc
+	Đội 20:	Bùi Văn Côn
+		Lê Hải Linh
+		
+Lượt 2 Bảng E	Đội 17:	Nguyễn Ngọc Thắng
+		Hà Phương
+	Đội 19:	Tuấn Anh
+		Nguyễn Cúc
+		
+Lượt 2 Bảng E	Đội 18:	Vũ Xuân Thịnh
+		Nguyễn Tất Tâm
+	Đội 20:	Bùi Văn Côn
+		Lê Hải Linh
+		
+Lượt 3 Bảng E	Đội 17:	Nguyễn Ngọc Thắng
+		Hà Phương
+	Đội 20:	Bùi Văn Côn
+		Lê Hải Linh
+		
+Lượt 3 Bảng E	Đội 18:	Vũ Xuân Thịnh
+		Nguyễn Tất Tâm
+	Đội 19:	Tuấn Anh
+		Nguyễn Cúc
