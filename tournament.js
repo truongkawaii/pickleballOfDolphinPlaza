@@ -273,15 +273,19 @@ class TournamentManager {
       }
     });
 
+    // Sort group winners by ranking criteria (top 5)
+    const sortedGroupWinners = this.rankTeams(groupWinners);
+
     // Sort runners-up by ranking criteria
     const sortedRunnersUp = this.rankTeams(runnersUp);
 
-    // Get top 3 runners-up
+    // Get top 3 runners-up (positions 6-8)
     const bestRunnersUp = sortedRunnersUp.slice(0, 3);
 
-    // Combine and sort all qualified teams
-    const allQualified = [...groupWinners, ...bestRunnersUp];
-    return this.rankTeams(allQualified);
+    // Combine: group winners first (positions 1-5), then best runners-up (positions 6-8)
+    // Do NOT re-sort them together
+    const allQualified = [...sortedGroupWinners, ...bestRunnersUp];
+    return allQualified;
   }
 
   // Knockout Stage Management
