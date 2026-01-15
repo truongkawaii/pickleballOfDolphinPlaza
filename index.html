@@ -56,7 +56,15 @@
             class="mobile-view-logo"
           />
           <h2>Thiết lập đội thi đấu</h2>
-          <p class="subtitle">40 người - 20 đội - 5 bảng (A, B, C, D, E)</p>
+          <p class="subtitle" id="setup-subtitle">Loading...</p>
+          <button
+            class="btn btn-sm btn-secondary"
+            id="config-btn"
+            style="margin-top: 0.5rem"
+          >
+            <span class="btn-icon">⚙️</span>
+            Cấu hình giải đấu
+          </button>
         </div>
 
         <div class="groups-container">
@@ -158,7 +166,7 @@
             class="mobile-view-logo"
           />
           <h2>Sơ đồ vòng loại trực tiếp</h2>
-          <p class="subtitle">Tứ kết → Bán kết → Chung kết</p>
+          <p class="subtitle" id="bracket-subtitle">Loading...</p>
         </div>
 
         <div class="qualification-info">
@@ -179,6 +187,7 @@
           <div class="knockout-form">
             <select id="knockout-stage" class="form-select">
               <option value="">Chọn vòng đấu</option>
+              <option value="roundOf16">Vòng 1/16</option>
               <option value="quarterfinal">Tứ kết</option>
               <option value="semifinal">Bán kết</option>
               <option value="final">Chung kết</option>
@@ -342,6 +351,85 @@
       </section>
     </main>
 
+    <!-- Configuration Modal -->
+    <div id="config-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Cấu hình giải đấu</h3>
+          <button class="modal-close" onclick="app.closeConfigModal()">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Số bảng đấu</label>
+            <select id="config-num-groups" class="form-select">
+              <option value="2">2 bảng</option>
+              <option value="4">4 bảng</option>
+              <option value="5" selected>5 bảng (hiện tại)</option>
+              <option value="8">8 bảng</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Số đội/bảng</label>
+            <input
+              type="number"
+              id="config-teams-per-group"
+              class="form-input"
+              min="3"
+              max="8"
+              value="4"
+              placeholder="Từ 3 đến 8"
+            />
+          </div>
+          <div
+            class="form-group"
+            style="
+              background: var(--bg-hover);
+              padding: 1rem;
+              border-radius: 8px;
+              margin-top: 1rem;
+            "
+          >
+            <p
+              style="margin: 0; color: var(--text-secondary); font-size: 0.9rem"
+            >
+              <strong id="config-summary">Tổng: 20 đội (40 người)</strong><br />
+              <span
+                id="config-knockout-info"
+                style="font-size: 0.85rem; color: var(--text-muted)"
+              >
+                Vòng loại: Top 2 từ mỗi bảng (10 đội) → Tứ kết → Bán kết → Chung
+                kết
+              </span>
+            </p>
+          </div>
+          <div
+            style="
+              margin-top: 1rem;
+              padding: 0.75rem;
+              background: #fff3cd;
+              border-left: 4px solid #ffeb3b;
+              color: #856404;
+              font-size: 0.85rem;
+              border-radius: 4px;
+            "
+          >
+            ⚠️ <strong>Lưu ý:</strong> Thay đổi cấu hình sẽ xóa tất cả dữ liệu
+            hiện tại!
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="app.closeConfigModal()">
+            Hủy
+          </button>
+          <button class="btn btn-primary" id="save-config-btn">
+            Lưu cấu hình
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Team Modal -->
     <div id="team-modal" class="modal">
       <div class="modal-content">
@@ -481,6 +569,7 @@
 
     <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="config.js"></script>
     <script src="data.js"></script>
     <script src="app.js"></script>
     <script src="tournament.js"></script>

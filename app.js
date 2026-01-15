@@ -18,7 +18,85 @@ class TournamentApp {
   init() {
     this.setupEventListeners();
     this.loadFromStorage();
+    this.updateDynamicUI();
     this.render();
+  }
+
+  // Update dynamic UI elements based on configuration
+  updateDynamicUI() {
+    const config = tournamentConfig.getTournamentConfig();
+    const totalTeams = tournamentConfig.getTotalTeams();
+    const groupLabels = tournamentConfig.getGroupLabels();
+
+    // Update setup subtitle
+    const setupSubtitle = document.getElementById("setup-subtitle");
+    if (setupSubtitle) {
+      setupSubtitle.textContent = `${
+        totalTeams * 2
+      } người - ${totalTeams} đội - ${
+        config.numGroups
+      } bảng (${groupLabels.join(", ")})`;
+    }
+
+    // Update bracket subtitle
+    const bracketSubtitle = document.getElementById("bracket-subtitle");
+    if (bracketSubtitle) {
+      bracketSubtitle.textContent = tournamentConfig.getBracketSubtitle();
+    }
+
+    // Update group tabs
+    this.updateGroupTabs();
+
+    // Update group dropdowns
+    this.updateGroupDropdowns();
+  }
+
+  updateGroupTabs() {
+    const groupTabsContainer = document.querySelector(".group-tabs");
+    if (!groupTabsContainer) return;
+
+    const groupLabels = tournamentConfig.getGroupLabels();
+
+    groupTabsContainer.innerHTML =
+      groupLabels
+        .map(
+          (label) =>
+            `<button class="group-tab ${
+              this.currentGroup === label ? "active" : ""
+            }" data-group="${label}">Bảng ${label}</button>`
+        )
+        .join("") +
+      '<button class="group-tab" data-group="all">Tổng hợp</button>';
+
+    // Re-attach event listeners
+    groupTabsContainer.querySelectorAll(".group-tab").forEach((tab) => {
+      tab.addEventListener("click", (e) => {
+        const group = e.currentTarget.dataset.group;
+        this.switchGroup(group);
+      });
+    });
+  }
+
+  updateGroupDropdowns() {
+    const groupLabels = tournamentConfig.getGroupLabels();
+
+    // Update team modal dropdown
+    const teamGroupSelect = document.getElementById("team-group");
+    if (teamGroupSelect) {
+      teamGroupSelect.innerHTML = groupLabels
+        .map((label) => `<option value="${label}">Bảng ${label}</option>`)
+        .join("");
+    }
+
+    // Update match group dropdown
+    const matchGroupSelect = document.getElementById("match-group");
+    if (matchGroupSelect) {
+      matchGroupSelect.innerHTML =
+        `<option value="">Chọn bảng</option>` +
+        groupLabels
+          .map((label) => `<option value="${label}">Bảng ${label}</option>`)
+          .join("");
+    }
   }
 
   setupEventListeners() {
@@ -114,6 +192,29 @@ class TournamentApp {
     document
       .getElementById("reset-scores-btn")
       ?.addEventListener("click", () => this.resetScores());
+
+    // Configuration button
+    document
+      .getElementById("config-btn")
+      ?.addEventListener("click", () => this.openConfigModal());
+    document
+      .getElementById("save-config-btn")
+      ?.addEventListener("click", () => this.saveConfig());
+
+    // Config modal listeners
+    document.getElementById("config-modal")?.addEventListener("click", (e) => {
+      if (e.target.id === "config-modal") {
+        this.closeConfigModal();
+      }
+    });
+
+    // Update config preview when changed
+    document
+      .getElementById("config-num-groups")
+      ?.addEventListener("change", () => this.updateConfigPreview());
+    document
+      .getElementById("config-teams-per-group")
+      ?.addEventListener("input", () => this.updateConfigPreview());
   }
 
   switchView(view) {
@@ -194,12 +295,16 @@ class TournamentApp {
       return;
     }
 
-    // Check group limit (4 teams per group)
+    // Check group limit (dynamic based on configuration)
+    const config = tournamentConfig.getTournamentConfig();
     const groupTeams = tournament.teams.filter(
       (t) => t.group === group && t.id !== this.currentEditTeam
     );
-    if (groupTeams.length >= 4 && !this.currentEditTeam) {
-      this.showMessage(`Bảng ${group} đã đủ 4 đội!`, "error");
+    if (groupTeams.length >= config.teamsPerGroup && !this.currentEditTeam) {
+      this.showMessage(
+        `Bảng ${group} đã đủ ${config.teamsPerGroup} đội!`,
+        "error"
+      );
       return;
     }
 
@@ -224,6 +329,76 @@ class TournamentApp {
     this.render();
   }
 
+  // Configuration Modal Methods
+  openConfigModal() {
+    const config = tournamentConfig.getTournamentConfig();
+    document.getElementById("config-num-groups").value = config.numGroups;
+    document.getElementById("config-teams-per-group").value =
+      config.teamsPerGroup;
+    this.updateConfigPreview();
+    document.getElementById("config-modal").classList.add("active");
+  }
+
+  closeConfigModal() {
+    document.getElementById("config-modal").classList.remove("active");
+  }
+
+  updateConfigPreview() {
+    const numGroups = parseInt(
+      document.getElementById("config-num-groups").value
+    );
+    const teamsPerGroup = parseInt(
+      document.getElementById("config-teams-per-group").value
+    );
+
+    if (!numGroups || !teamsPerGroup) return;
+
+    const totalTeams = numGroups * teamsPerGroup;
+    const qualifiedTeams = numGroups * 2;
+
+    document.getElementById(
+      "config-summary"
+    ).textContent = `Tổng: ${totalTeams} đội (${totalTeams * 2} người)`;
+
+    // Determine knockout path
+    let knockoutPath = "";
+    if (qualifiedTeams === 4) {
+      knockoutPath = "Bán kết → Chung kết";
+    } else if (qualifiedTeams === 8 || qualifiedTeams === 10) {
+      knockoutPath = "Tứ kết → Bán kết → Chung kết";
+    } else if (qualifiedTeams === 16) {
+      knockoutPath = "Vòng 1/16 → Tứ kết → Bán kết → Chung kết";
+    }
+
+    document.getElementById(
+      "config-knockout-info"
+    ).textContent = `Vòng loại: Top 2 từ mỗi bảng (${qualifiedTeams} đội) → ${knockoutPath}`;
+  }
+
+  saveConfig() {
+    const numGroups = parseInt(
+      document.getElementById("config-num-groups").value
+    );
+    const teamsPerGroup = parseInt(
+      document.getElementById("config-teams-per-group").value
+    );
+
+    try {
+      tournamentConfig.setTournamentConfig(numGroups, teamsPerGroup);
+
+      // Reset all data when configuration changes
+      this.resetAllData();
+
+      // Update UI
+      this.updateDynamicUI();
+      this.closeConfigModal();
+      this.showMessage("Đã lưu cấu hình mới!", "success");
+      this.render();
+    } catch (error) {
+      this.showMessage(error.message, "error");
+    }
+  }
+
   updateMatchTeamOptions(group) {
     const team1Select = document.getElementById("match-team1");
     const team2Select = document.getElementById("match-team2");
@@ -242,13 +417,34 @@ class TournamentApp {
     const matchSelect = document.getElementById("knockout-match");
     let options = "";
 
-    if (stage === "quarterfinal") {
+    if (stage === "roundOf16") {
       options = `
+                <option value="0">1/16 (1): Hạng 1 vs Hạng 16</option>
+                <option value="1">1/16 (2): Hạng 2 vs Hạng 15</option>
+                <option value="2">1/16 (3): Hạng 3 vs Hạng 14</option>
+                <option value="3">1/16 (4): Hạng 4 vs Hạng 13</option>
+                <option value="4">1/16 (5): Hạng 5 vs Hạng 12</option>
+                <option value="5">1/16 (6): Hạng 6 vs Hạng 11</option>
+                <option value="6">1/16 (7): Hạng 7 vs Hạng 10</option>
+                <option value="7">1/16 (8): Hạng 8 vs Hạng 9</option>
+            `;
+    } else if (stage === "quarterfinal") {
+      const stages = tournamentConfig.getKnockoutStages();
+      if (stages.includes("roundOf16")) {
+        options = `
+                <option value="0">Tứ kết 1 (Thắng 1/16-1 vs Thắng 1/16-2)</option>
+                <option value="1">Tứ kết 2 (Thắng 1/16-3 vs Thắng 1/16-4)</option>
+                <option value="2">Tứ kết 3 (Thắng 1/16-5 vs Thắng 1/16-6)</option>
+                <option value="3">Tứ kết 4 (Thắng 1/16-7 vs Thắng 1/16-8)</option>
+            `;
+      } else {
+        options = `
                 <option value="0">Tứ kết 1 (Hạng 1 vs Hạng 8)</option>
                 <option value="1">Tứ kết 2 (Hạng 2 vs Hạng 7)</option>
                 <option value="2">Tứ kết 3 (Hạng 3 vs Hạng 6)</option>
                 <option value="3">Tứ kết 4 (Hạng 4 vs Hạng 5)</option>
             `;
+      }
     } else if (stage === "semifinal") {
       options = `
                 <option value="0">Bán kết 1 (Thắng TK1 vs Thắng TK4)</option>
@@ -275,7 +471,9 @@ class TournamentApp {
     const idx = parseInt(matchIndex);
     let matchData = null;
 
-    if (stage === "quarterfinal") {
+    if (stage === "roundOf16") {
+      matchData = tournament.matches.knockout.roundOf16?.[idx];
+    } else if (stage === "quarterfinal") {
       matchData = tournament.matches.knockout.quarterfinals[idx];
     } else if (stage === "semifinal") {
       matchData = tournament.matches.knockout.semifinals[idx];
@@ -318,11 +516,11 @@ class TournamentApp {
 
   renderResults() {
     const content = document.getElementById("results-content");
-    const groups = ["A", "B", "C", "D", "E"];
+    const groupLabels = tournamentConfig.getGroupLabels();
 
     let html = '<div class="results-summary">';
 
-    groups.forEach((group) => {
+    groupLabels.forEach((group) => {
       const groupMatches = tournament.matches.groupStage.filter(
         (m) => m.group === group
       );
@@ -408,9 +606,10 @@ class TournamentApp {
 
   renderTeamSetup() {
     const container = document.querySelector(".groups-container");
-    const groups = ["A", "B", "C", "D", "E"];
+    const groupLabels = tournamentConfig.getGroupLabels();
+    const config = tournamentConfig.getTournamentConfig();
 
-    container.innerHTML = groups
+    container.innerHTML = groupLabels
       .map((group) => {
         const teams = tournament.teams.filter((t) => t.group === group);
 
@@ -418,7 +617,9 @@ class TournamentApp {
                 <div class="group-card">
                     <div class="group-header">
                         <div class="group-name">Bảng ${group}</div>
-                        <div class="group-count">${teams.length}/4 đội</div>
+                        <div class="group-count">${teams.length}/${
+          config.teamsPerGroup
+        } đội</div>
                     </div>
                     <ul class="team-list">
                         ${

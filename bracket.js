@@ -20,6 +20,7 @@ class BracketManager {
 
   renderQualifiedTeams() {
     const container = document.getElementById("qualified-teams-list");
+    const requiredTeams = tournamentConfig.getQualifiedTeamsCount();
 
     if (this.qualifiedTeams.length === 0) {
       container.innerHTML =
@@ -28,9 +29,12 @@ class BracketManager {
     }
 
     container.innerHTML = this.qualifiedTeams
-      .slice(0, 8)
       .map((team, idx) => {
-        const label = idx < 5 ? "Nhất bảng" : "Nhì bảng (vé vớt)";
+        // Determine if this team is 1st or 2nd from their group
+        const groupStandings = tournament.getGroupStandings(team.group);
+        const groupRank = groupStandings.findIndex((t) => t.id === team.id) + 1;
+        const label = groupRank === 1 ? "Nhất bảng" : "Nhì bảng";
+
         return `
                 <div class="qualified-team">
                     <div>
@@ -54,140 +58,210 @@ class BracketManager {
 
   renderBracket() {
     const container = document.getElementById("bracket-container");
+    const requiredTeams = tournamentConfig.getQualifiedTeamsCount();
 
-    if (this.qualifiedTeams.length < 8) {
+    if (this.qualifiedTeams.length < requiredTeams) {
       container.innerHTML = `
                 <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
                     <h3 style="margin-bottom: 1rem;">Chưa đủ đội để tạo sơ đồ đấu</h3>
-                    <p>Cần 8 đội (5 nhất bảng + 3 nhì bảng) để bắt đầu vòng loại trực tiếp.</p>
-                    <p>Hiện có: ${this.qualifiedTeams.length}/8 đội</p>
+                    <p>Cần ${requiredTeams} đội (top 2 từ mỗi bảng) để bắt đầu vòng loại trực tiếp.</p>
+                    <p>Hiện có: ${this.qualifiedTeams.length}/${requiredTeams} đội</p>
                 </div>
             `;
       return;
     }
 
-    const quarterfinals = this.getQuarterfinals();
-    const semifinals = this.getSemifinals();
-    const final = this.getFinal();
+    const stages = tournamentConfig.getKnockoutStages();
+    let rounds = [];
 
-    container.innerHTML = `
-            <div class="bracket">
-                <!-- Quarterfinals -->
+    // Build rounds based on stages
+    if (stages.includes("roundOf16")) {
+      rounds.push({
+        title: "Vòng 1/16",
+        matches: this.getRoundOf16(),
+      });
+    }
+
+    if (stages.includes("quarterfinal")) {
+      rounds.push({
+        title: "Tứ kết",
+        matches: this.getQuarterfinals(),
+      });
+    }
+
+    if (stages.includes("semifinal")) {
+      rounds.push({
+        title: "Bán kết",
+        matches: this.getSemifinals(),
+      });
+    }
+
+    if (stages.includes("final")) {
+      rounds.push({
+        title: "Chung kết",
+        matches: [this.getFinal()],
+      });
+    }
+
+    // Render all rounds
+    let bracketHTML = '<div class="bracket">';
+
+    rounds.forEach((round) => {
+      bracketHTML += `
                 <div class="bracket-round">
-                    <div class="round-title">Tứ kết</div>
-                    ${quarterfinals
+                    <div class="round-title">${round.title}</div>
+                    ${round.matches
                       .map((match, idx) =>
-                        this.renderMatch(match, `QF${idx + 1}`)
+                        this.renderMatch(match, `${round.title}_${idx + 1}`)
                       )
                       .join("")}
                 </div>
+            `;
+    });
 
-                <!-- Semifinals -->
-                <div class="bracket-round">
-                    <div class="round-title">Bán kết</div>
-                    ${semifinals
-                      .map((match, idx) =>
-                        this.renderMatch(match, `SF${idx + 1}`)
-                      )
-                      .join("")}
-                </div>
-
-                <!-- Final -->
-                <div class="bracket-round">
-                    <div class="round-title">Chung kết</div>
-                    ${this.renderMatch(final, "Final")}
-                </div>
-
-                <!-- Winner -->
-                <div class="bracket-round">
-                    <div class="round-title">🏆 Vô địch</div>
-                    ${this.renderWinner()}
-                </div>
+    // Winner
+    bracketHTML += `
+            <div class="bracket-round">
+                <div class="round-title">🏆 Vô địch</div>
+                ${this.renderWinner()}
             </div>
-        `;
+        </div>`;
+
+    container.innerHTML = bracketHTML;
   }
 
+  // Get Round of 16 matches (16 teams)
+  getRoundOf16() {
+    const r16 = [];
+    const matches = tournament.matches.knockout.roundOf16 || [];
+
+    // Standard seeding for 16 teams: 1v16, 2v15, 3v14, 4v13, 5v12, 6v11, 7v10, 8v9
+    const matchups = [
+      [0, 15],
+      [1, 14],
+      [2, 13],
+      [3, 12],
+      [4, 11],
+      [5, 10],
+      [6, 9],
+      [7, 8],
+    ];
+
+    matchups.forEach(([idx1, idx2], matchIdx) => {
+      r16.push({
+        team1: this.qualifiedTeams[idx1],
+        team2: this.qualifiedTeams[idx2],
+        matchData: matches[matchIdx],
+        label: `1/16 ${matchIdx + 1}: Hạng ${idx1 + 1} vs Hạng ${idx2 + 1}`,
+        stage: "roundOf16",
+        index: matchIdx,
+      });
+    });
+
+    return r16;
+  }
+
+  // Get Quarterfinal matches (8 or 16 teams)
   getQuarterfinals() {
     const qf = [];
-    const matches = tournament.matches.knockout.quarterfinals;
+    const matches = tournament.matches.knockout.quarterfinals || [];
+    const stages = tournamentConfig.getKnockoutStages();
 
-    // QF1: Rank 1 vs Rank 8
-    qf.push({
-      team1: this.qualifiedTeams[0],
-      team2: this.qualifiedTeams[7],
-      matchData: matches[0],
-      label: "TK1: Hạng 1 vs Hạng 8",
-      stage: "quarterfinal",
-      index: 0,
-    });
+    if (stages.includes("roundOf16")) {
+      // Quarterfinals come from Round of 16 winners
+      const r16Matches = this.getRoundOf16();
 
-    // QF2: Rank 2 vs Rank 7
-    qf.push({
-      team1: this.qualifiedTeams[1],
-      team2: this.qualifiedTeams[6],
-      matchData: matches[1],
-      label: "TK2: Hạng 2 vs Hạng 7",
-      stage: "quarterfinal",
-      index: 1,
-    });
+      for (let i = 0; i < 4; i++) {
+        const match1 = r16Matches[i * 2];
+        const match2 = r16Matches[i * 2 + 1];
 
-    // QF3: Rank 3 vs Rank 6
-    qf.push({
-      team1: this.qualifiedTeams[2],
-      team2: this.qualifiedTeams[5],
-      matchData: matches[2],
-      label: "TK3: Hạng 3 vs Hạng 6",
-      stage: "quarterfinal",
-      index: 2,
-    });
+        qf.push({
+          team1: this.getMatchWinner(match1),
+          team2: this.getMatchWinner(match2),
+          matchData: matches[i],
+          label: `TK${i + 1}: Thắng 1/16 ${i * 2 + 1} vs Thắng 1/16 ${
+            i * 2 + 2
+          }`,
+          stage: "quarterfinal",
+          index: i,
+        });
+      }
+    } else {
+      // Quarterfinals with 8 teams (standard seeding: 1v8, 2v7, 3v6, 4v5)
+      const matchups = [
+        [0, 7],
+        [1, 6],
+        [2, 5],
+        [3, 4],
+      ];
 
-    // QF4: Rank 4 vs Rank 5
-    qf.push({
-      team1: this.qualifiedTeams[3],
-      team2: this.qualifiedTeams[4],
-      matchData: matches[3],
-      label: "TK4: Hạng 4 vs Hạng 5",
-      stage: "quarterfinal",
-      index: 3,
-    });
+      matchups.forEach(([idx1, idx2], matchIdx) => {
+        qf.push({
+          team1: this.qualifiedTeams[idx1],
+          team2: this.qualifiedTeams[idx2],
+          matchData: matches[matchIdx],
+          label: `TK${matchIdx + 1}: Hạng ${idx1 + 1} vs Hạng ${idx2 + 1}`,
+          stage: "quarterfinal",
+          index: matchIdx,
+        });
+      });
+    }
 
     return qf;
   }
 
+  // Get Semifinal matches
   getSemifinals() {
     const sf = [];
-    const quarterfinals = this.getQuarterfinals();
-    const matches = tournament.matches.knockout.semifinals;
+    const matches = tournament.matches.knockout.semifinals || [];
+    const stages = tournamentConfig.getKnockoutStages();
 
-    // SF1: Winner QF1 vs Winner QF4
-    const qf1Winner = this.getMatchWinner(quarterfinals[0]);
-    const qf4Winner = this.getMatchWinner(quarterfinals[3]);
+    if (stages.includes("quarterfinal")) {
+      // Semifinals from quarterfinal winners
+      const qfMatches = this.getQuarterfinals();
 
-    sf.push({
-      team1: qf1Winner,
-      team2: qf4Winner,
-      matchData: matches[0],
-      label: "BK1: Thắng TK1 vs Thắng TK4",
-      stage: "semifinal",
-      index: 0,
-    });
+      sf.push({
+        team1: this.getMatchWinner(qfMatches[0]),
+        team2: this.getMatchWinner(qfMatches[3]),
+        matchData: matches[0],
+        label: "BK1: Thắng TK1 vs Thắng TK4",
+        stage: "semifinal",
+        index: 0,
+      });
 
-    // SF2: Winner QF2 vs Winner QF3
-    const qf2Winner = this.getMatchWinner(quarterfinals[1]);
-    const qf3Winner = this.getMatchWinner(quarterfinals[2]);
+      sf.push({
+        team1: this.getMatchWinner(qfMatches[1]),
+        team2: this.getMatchWinner(qfMatches[2]),
+        matchData: matches[1],
+        label: "BK2: Thắng TK2 vs Thắng TK3",
+        stage: "semifinal",
+        index: 1,
+      });
+    } else {
+      // Semifinals with 4 teams (1v4, 2v3)
+      sf.push({
+        team1: this.qualifiedTeams[0],
+        team2: this.qualifiedTeams[3],
+        matchData: matches[0],
+        label: "BK1: Hạng 1 vs Hạng 4",
+        stage: "semifinal",
+        index: 0,
+      });
 
-    sf.push({
-      team1: qf2Winner,
-      team2: qf3Winner,
-      matchData: matches[1],
-      label: "BK2: Thắng TK2 vs Thắng TK3",
-      stage: "semifinal",
-      index: 1,
-    });
+      sf.push({
+        team1: this.qualifiedTeams[1],
+        team2: this.qualifiedTeams[2],
+        matchData: matches[1],
+        label: "BK2: Hạng 2 vs Hạng 3",
+        stage: "semifinal",
+        index: 1,
+      });
+    }
 
     return sf;
   }
 
+  // Get Final match
   getFinal() {
     const semifinals = this.getSemifinals();
     const sf1Winner = this.getMatchWinner(semifinals[0]);

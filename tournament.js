@@ -2,14 +2,30 @@
 class TournamentManager {
   constructor() {
     this.teams = [];
+    this.initializeKnockoutStages();
+  }
+
+  // Initialize knockout stages based on configuration
+  initializeKnockoutStages() {
+    const stages = tournamentConfig.getKnockoutStages();
     this.matches = {
       groupStage: [],
-      knockout: {
-        quarterfinals: [],
-        semifinals: [],
-        final: null,
-      },
+      knockout: {},
     };
+
+    // Initialize only the stages we need
+    if (stages.includes("roundOf16")) {
+      this.matches.knockout.roundOf16 = [];
+    }
+    if (stages.includes("quarterfinal")) {
+      this.matches.knockout.quarterfinals = [];
+    }
+    if (stages.includes("semifinal")) {
+      this.matches.knockout.semifinals = [];
+    }
+    if (stages.includes("final")) {
+      this.matches.knockout.final = null;
+    }
   }
 
   // Team Management
@@ -55,14 +71,7 @@ class TournamentManager {
   }
 
   resetMatches() {
-    this.matches = {
-      groupStage: [],
-      knockout: {
-        quarterfinals: [],
-        semifinals: [],
-        final: null,
-      },
-    };
+    this.initializeKnockoutStages();
     this.updateTeamStats();
   }
 
@@ -258,34 +267,24 @@ class TournamentManager {
 
   // Get qualified teams for knockout stage
   getQualifiedTeams() {
-    const groups = ["A", "B", "C", "D", "E"];
-    const groupWinners = [];
-    const runnersUp = [];
+    const groups = tournamentConfig.getGroupLabels();
+    const allQualified = [];
 
-    // Get first and second place from each group
+    // Get top 2 from each group
     groups.forEach((group) => {
       const standings = this.getGroupStandings(group);
       if (standings.length > 0) {
-        groupWinners.push(standings[0]);
+        allQualified.push(standings[0]); // 1st place
         if (standings.length > 1) {
-          runnersUp.push(standings[1]);
+          allQualified.push(standings[1]); // 2nd place
         }
       }
     });
 
-    // Sort group winners by ranking criteria (top 5)
-    const sortedGroupWinners = this.rankTeams(groupWinners);
+    // Now rank all qualified teams globally
+    const rankedQualified = this.rankTeams(allQualified);
 
-    // Sort runners-up by ranking criteria
-    const sortedRunnersUp = this.rankTeams(runnersUp);
-
-    // Get top 3 runners-up (positions 6-8)
-    const bestRunnersUp = sortedRunnersUp.slice(0, 3);
-
-    // Combine: group winners first (positions 1-5), then best runners-up (positions 6-8)
-    // Do NOT re-sort them together
-    const allQualified = [...sortedGroupWinners, ...bestRunnersUp];
-    return allQualified;
+    return rankedQualified;
   }
 
   // Knockout Stage Management
@@ -315,7 +314,18 @@ class TournamentManager {
       timestamp: Date.now(),
     };
 
-    if (stage === "quarterfinal") {
+    if (stage === "roundOf16") {
+      if (!this.matches.knockout.roundOf16) {
+        this.matches.knockout.roundOf16 = [];
+      }
+      if (!this.matches.knockout.roundOf16[matchIndex]) {
+        this.matches.knockout.roundOf16[matchIndex] = {};
+      }
+      this.matches.knockout.roundOf16[matchIndex] = {
+        ...this.matches.knockout.roundOf16[matchIndex],
+        ...matchData,
+      };
+    } else if (stage === "quarterfinal") {
       if (!this.matches.knockout.quarterfinals[matchIndex]) {
         this.matches.knockout.quarterfinals[matchIndex] = {};
       }
@@ -374,7 +384,18 @@ class TournamentManager {
       timestamp: Date.now(),
     };
 
-    if (stage === "quarterfinal") {
+    if (stage === "roundOf16") {
+      if (!this.matches.knockout.roundOf16) {
+        this.matches.knockout.roundOf16 = [];
+      }
+      if (!this.matches.knockout.roundOf16[matchIndex]) {
+        this.matches.knockout.roundOf16[matchIndex] = {};
+      }
+      this.matches.knockout.roundOf16[matchIndex] = {
+        ...this.matches.knockout.roundOf16[matchIndex],
+        ...matchData,
+      };
+    } else if (stage === "quarterfinal") {
       if (!this.matches.knockout.quarterfinals[matchIndex]) {
         this.matches.knockout.quarterfinals[matchIndex] = {};
       }
