@@ -7,7 +7,8 @@ class TournamentConfig {
   // Default configuration
   getDefaultConfig() {
     return {
-      numGroups: 5, // 2, 4, or 8
+      formatType: "multi-group", // 'multi-group' or 'simple'
+      numGroups: 5, // 2, 4, 5, or 8 for multi-group; 1 for simple
       teamsPerGroup: 4, // 3-8
       version: 1,
     };
@@ -43,16 +44,28 @@ class TournamentConfig {
 
   // Validate configuration
   isValidConfig(config) {
-    const validGroups = [2, 4, 5, 8];
+    const validGroupsMulti = [2, 4, 5, 8];
     const minTeams = 3;
     const maxTeams = 8;
 
-    return (
-      config &&
-      validGroups.includes(config.numGroups) &&
-      config.teamsPerGroup >= minTeams &&
-      config.teamsPerGroup <= maxTeams
-    );
+    if (!config || !config.formatType) return false;
+
+    // Validate based on format type
+    if (config.formatType === "simple") {
+      return (
+        config.numGroups === 1 &&
+        config.teamsPerGroup >= minTeams &&
+        config.teamsPerGroup <= maxTeams
+      );
+    } else if (config.formatType === "multi-group") {
+      return (
+        validGroupsMulti.includes(config.numGroups) &&
+        config.teamsPerGroup >= minTeams &&
+        config.teamsPerGroup <= maxTeams
+      );
+    }
+
+    return false;
   }
 
   // Get current configuration
@@ -60,9 +73,15 @@ class TournamentConfig {
     return { ...this.config };
   }
 
+  // Check if using simple format
+  isSimpleFormat() {
+    return this.config.formatType === "simple";
+  }
+
   // Set tournament configuration
-  setTournamentConfig(numGroups, teamsPerGroup) {
+  setTournamentConfig(formatType, numGroups, teamsPerGroup) {
     const newConfig = {
+      formatType: formatType || "multi-group",
       numGroups: parseInt(numGroups),
       teamsPerGroup: parseInt(teamsPerGroup),
       version: 1,
@@ -70,7 +89,7 @@ class TournamentConfig {
 
     if (!this.isValidConfig(newConfig)) {
       throw new Error(
-        "Invalid configuration. Groups must be 2, 4, 5, or 8. Teams per group must be 3-8."
+        "Invalid configuration. For multi-group: 2, 4, 5, or 8 groups. For simple: 1 group. Teams per group: 3-8.",
       );
     }
 
@@ -92,11 +111,20 @@ class TournamentConfig {
   // Get group labels (A, B, C, D, etc.)
   getGroupLabels() {
     const labels = ["A", "B", "C", "D", "E", "F", "G", "H"];
+    if (this.isSimpleFormat()) {
+      return ["A"]; // Simple format always uses single group
+    }
     return labels.slice(0, this.config.numGroups);
   }
 
   // Determine knockout stages based on qualified teams
   getKnockoutStages() {
+    // Simple format: only finals
+    if (this.isSimpleFormat()) {
+      return ["final"];
+    }
+
+    // Multi-group format: based on number of qualified teams
     const qualifiedCount = this.getQualifiedTeamsCount();
 
     switch (qualifiedCount) {
@@ -127,6 +155,9 @@ class TournamentConfig {
 
   // Get bracket subtitle (e.g., "Tứ kết → Bán kết → Chung kết")
   getBracketSubtitle() {
+    if (this.isSimpleFormat()) {
+      return "Vòng bảng → Chung kết (Top 2)";
+    }
     const stages = this.getKnockoutStages();
     return stages.map((s) => this.getStageDisplayName(s)).join(" → ");
   }

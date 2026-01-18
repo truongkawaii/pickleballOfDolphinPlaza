@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -362,6 +362,44 @@
         </div>
         <div class="modal-body">
           <div class="form-group">
+            <label>Định dạng giải đấu</label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem">
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  cursor: pointer;
+                "
+              >
+                <input
+                  type="radio"
+                  name="format-type"
+                  id="config-format-multi"
+                  value="multi-group"
+                  checked
+                />
+                <span>Nhiều bảng + Vòng loại</span>
+              </label>
+              <label
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 0.5rem;
+                  cursor: pointer;
+                "
+              >
+                <input
+                  type="radio"
+                  name="format-type"
+                  id="config-format-simple"
+                  value="simple"
+                />
+                <span>Đơn giản (Vòng tròn + Chung kết)</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group" id="config-num-groups-container">
             <label>Số bảng đấu</label>
             <select id="config-num-groups" class="form-select">
               <option value="2">2 bảng</option>

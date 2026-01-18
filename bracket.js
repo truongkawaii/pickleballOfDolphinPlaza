@@ -39,16 +39,16 @@ class BracketManager {
                 <div class="qualified-team">
                     <div>
                         <strong>Hạng ${idx + 1}: ${this.getTeamDisplayName(
-          team
-        )}</strong>
+                          team,
+                        )}</strong>
                         <span style="color: var(--text-secondary); margin-left: 1rem;">(Bảng ${
                           team.group
                         } - ${label})</span>
                     </div>
                     <div style="color: var(--accent-solid);">
                         ${team.stats.wins} thắng | +${
-          team.stats.pointDiff > 0 ? team.stats.pointDiff : "0"
-        }
+                          team.stats.pointDiff > 0 ? team.stats.pointDiff : "0"
+                        }
                     </div>
                 </div>
             `;
@@ -71,6 +71,13 @@ class BracketManager {
       return;
     }
 
+    // Check if using simple format
+    if (tournamentConfig.isSimpleFormat()) {
+      this.renderSimpleBracket();
+      return;
+    }
+
+    // Multi-group format: render full knockout bracket
     const stages = tournamentConfig.getKnockoutStages();
     let rounds = [];
 
@@ -112,7 +119,7 @@ class BracketManager {
                     <div class="round-title">${round.title}</div>
                     ${round.matches
                       .map((match, idx) =>
-                        this.renderMatch(match, `${round.title}_${idx + 1}`)
+                        this.renderMatch(match, `${round.title}_${idx + 1}`),
                       )
                       .join("")}
                 </div>
@@ -124,6 +131,32 @@ class BracketManager {
             <div class="bracket-round">
                 <div class="round-title">🏆 Vô địch</div>
                 ${this.renderWinner()}
+            </div>
+        </div>`;
+
+    container.innerHTML = bracketHTML;
+  }
+
+  // Render simple bracket (only finals for simple format)
+  renderSimpleBracket() {
+    const container = document.getElementById("bracket-container");
+    const final = this.getSimpleFinal();
+
+    let bracketHTML = '<div class="bracket">';
+
+    // Only show finals round
+    bracketHTML += `
+            <div class="bracket-round">
+                <div class="round-title">Chung kết</div>
+                ${this.renderMatch(final, "final_1")}
+            </div>
+        `;
+
+    // Winner
+    bracketHTML += `
+            <div class="bracket-round">
+                <div class="round-title">🏆 Vô địch</div>
+                ${this.renderWinner(true)}
             </div>
         </div>`;
 
@@ -261,6 +294,22 @@ class BracketManager {
     return sf;
   }
 
+  // Get Simple Final match (for simple format)
+  getSimpleFinal() {
+    // Top 2 teams from the round-robin
+    const team1 = this.qualifiedTeams[0];
+    const team2 = this.qualifiedTeams[1];
+
+    return {
+      team1,
+      team2,
+      matchData: tournament.matches.knockout.final,
+      label: "Chung kết: Top 1 vs Top 2",
+      stage: "final",
+      index: 0,
+    };
+  }
+
   // Get Final match
   getFinal() {
     const semifinals = this.getSemifinals();
@@ -309,7 +358,7 @@ class BracketManager {
           match.label
         }', '${team1Display.replace(/'/g, "\\'")}', '${team2Display.replace(
           /'/g,
-          "\\'"
+          "\\'",
         )}', '${matchData.score1 || ""}', '${matchData.score2 || ""}')"`
       : "";
 
@@ -332,8 +381,9 @@ class BracketManager {
         `;
   }
 
-  renderWinner() {
-    const final = this.getFinal();
+  renderWinner(isSimple = false) {
+    // For simple format, get winner directly from final match
+    const final = isSimple ? this.getSimpleFinal() : this.getFinal();
     const winner = this.getMatchWinner(final);
 
     if (winner.name === "???") {
@@ -349,7 +399,7 @@ class BracketManager {
             <div class="bracket-match" style="background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; text-align: center; padding: 2rem; border: none;">
                 <div style="font-size: 3rem; margin-bottom: 0.5rem;">🏆</div>
                 <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem;">${this.getTeamDisplayName(
-                  winner
+                  winner,
                 )}</div>
                 <div style="font-size: 0.9rem; opacity: 0.8;">Vô địch giải đấu</div>
             </div>

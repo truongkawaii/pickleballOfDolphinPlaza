@@ -63,7 +63,7 @@ class TournamentApp {
           (label) =>
             `<button class="group-tab ${
               this.currentGroup === label ? "active" : ""
-            }" data-group="${label}">Bảng ${label}</button>`
+            }" data-group="${label}">Bảng ${label}</button>`,
         )
         .join("") +
       '<button class="group-tab" data-group="all">Tổng hợp</button>';
@@ -215,6 +215,14 @@ class TournamentApp {
     document
       .getElementById("config-teams-per-group")
       ?.addEventListener("input", () => this.updateConfigPreview());
+
+    // Listen for format type changes
+    document.querySelectorAll('input[name="format-type"]').forEach((radio) => {
+      radio.addEventListener("change", (e) => {
+        this.toggleGroupSelector(e.target.value);
+        this.updateConfigPreview();
+      });
+    });
   }
 
   switchView(view) {
@@ -298,12 +306,12 @@ class TournamentApp {
     // Check group limit (dynamic based on configuration)
     const config = tournamentConfig.getTournamentConfig();
     const groupTeams = tournament.teams.filter(
-      (t) => t.group === group && t.id !== this.currentEditTeam
+      (t) => t.group === group && t.id !== this.currentEditTeam,
     );
     if (groupTeams.length >= config.teamsPerGroup && !this.currentEditTeam) {
       this.showMessage(
         `Bảng ${group} đã đủ ${config.teamsPerGroup} đội!`,
-        "error"
+        "error",
       );
       return;
     }
@@ -332,11 +340,35 @@ class TournamentApp {
   // Configuration Modal Methods
   openConfigModal() {
     const config = tournamentConfig.getTournamentConfig();
+
+    // Set format type
+    const formatType = config.formatType || "multi-group";
+    if (formatType === "simple") {
+      document.getElementById("config-format-simple").checked = true;
+    } else {
+      document.getElementById("config-format-multi").checked = true;
+    }
+
     document.getElementById("config-num-groups").value = config.numGroups;
     document.getElementById("config-teams-per-group").value =
       config.teamsPerGroup;
+
+    // Show/hide group selector based on format
+    this.toggleGroupSelector(formatType);
+
     this.updateConfigPreview();
     document.getElementById("config-modal").classList.add("active");
+  }
+
+  toggleGroupSelector(formatType) {
+    const groupContainer = document.getElementById(
+      "config-num-groups-container",
+    );
+    if (formatType === "simple") {
+      groupContainer.style.display = "none";
+    } else {
+      groupContainer.style.display = "block";
+    }
   }
 
   closeConfigModal() {
@@ -344,47 +376,67 @@ class TournamentApp {
   }
 
   updateConfigPreview() {
+    const formatType =
+      document.querySelector('input[name="format-type"]:checked')?.value ||
+      "multi-group";
     const numGroups = parseInt(
-      document.getElementById("config-num-groups").value
+      document.getElementById("config-num-groups").value,
     );
     const teamsPerGroup = parseInt(
-      document.getElementById("config-teams-per-group").value
+      document.getElementById("config-teams-per-group").value,
     );
 
-    if (!numGroups || !teamsPerGroup) return;
+    if (!teamsPerGroup) return;
 
-    const totalTeams = numGroups * teamsPerGroup;
-    const qualifiedTeams = numGroups * 2;
+    if (formatType === "simple") {
+      // Simple format: single group, all teams
+      document.getElementById("config-summary").textContent =
+        `Tổng: ${teamsPerGroup} đội (${teamsPerGroup * 2} người)`;
+      document.getElementById("config-knockout-info").textContent =
+        `Định dạng: Vòng tròn (tất cả đấu với tất cả) → Top 2 vào Chung kết`;
+    } else {
+      // Multi-group format
+      if (!numGroups) return;
 
-    document.getElementById(
-      "config-summary"
-    ).textContent = `Tổng: ${totalTeams} đội (${totalTeams * 2} người)`;
+      const totalTeams = numGroups * teamsPerGroup;
+      const qualifiedTeams = numGroups * 2;
 
-    // Determine knockout path
-    let knockoutPath = "";
-    if (qualifiedTeams === 4) {
-      knockoutPath = "Bán kết → Chung kết";
-    } else if (qualifiedTeams === 8 || qualifiedTeams === 10) {
-      knockoutPath = "Tứ kết → Bán kết → Chung kết";
-    } else if (qualifiedTeams === 16) {
-      knockoutPath = "Vòng 1/16 → Tứ kết → Bán kết → Chung kết";
+      document.getElementById("config-summary").textContent =
+        `Tổng: ${totalTeams} đội (${totalTeams * 2} người)`;
+
+      // Determine knockout path
+      let knockoutPath = "";
+      if (qualifiedTeams === 4) {
+        knockoutPath = "Bán kết → Chung kết";
+      } else if (qualifiedTeams === 8 || qualifiedTeams === 10) {
+        knockoutPath = "Tứ kết → Bán kết → Chung kết";
+      } else if (qualifiedTeams === 16) {
+        knockoutPath = "Vòng 1/16 → Tứ kết → Bán kết → Chung kết";
+      }
+
+      document.getElementById("config-knockout-info").textContent =
+        `Vòng loại: Top 2 từ mỗi bảng (${qualifiedTeams} đội) → ${knockoutPath}`;
     }
-
-    document.getElementById(
-      "config-knockout-info"
-    ).textContent = `Vòng loại: Top 2 từ mỗi bảng (${qualifiedTeams} đội) → ${knockoutPath}`;
   }
 
   saveConfig() {
-    const numGroups = parseInt(
-      document.getElementById("config-num-groups").value
-    );
+    const formatType =
+      document.querySelector('input[name="format-type"]:checked')?.value ||
+      "multi-group";
+    const numGroups =
+      formatType === "simple"
+        ? 1
+        : parseInt(document.getElementById("config-num-groups").value);
     const teamsPerGroup = parseInt(
-      document.getElementById("config-teams-per-group").value
+      document.getElementById("config-teams-per-group").value,
     );
 
     try {
-      tournamentConfig.setTournamentConfig(numGroups, teamsPerGroup);
+      tournamentConfig.setTournamentConfig(
+        formatType,
+        numGroups,
+        teamsPerGroup,
+      );
 
       // Reset all data when configuration changes
       this.resetAllData();
@@ -522,7 +574,7 @@ class TournamentApp {
 
     groupLabels.forEach((group) => {
       const groupMatches = tournament.matches.groupStage.filter(
-        (m) => m.group === group
+        (m) => m.group === group,
       );
 
       if (groupMatches.length > 0) {
@@ -547,7 +599,7 @@ class TournamentApp {
                 <div class="result-match-header">
                   <span class="result-match-number">Trận ${idx + 1}</span>
                   <span class="result-match-date">${new Date(
-                    match.timestamp
+                    match.timestamp,
                   ).toLocaleDateString("vi-VN")}</span>
                 </div>
                 <div class="result-match-body">
@@ -556,7 +608,7 @@ class TournamentApp {
                   }">
                     <div class="result-team-name">${team1.name}</div>
                     <div class="result-team-players">${this.getTeamDisplayName(
-                      team1
+                      team1,
                     )}</div>
                   </div>
                   <div class="result-score">
@@ -573,7 +625,7 @@ class TournamentApp {
                   }">
                     <div class="result-team-name">${team2.name}</div>
                     <div class="result-team-players">${this.getTeamDisplayName(
-                      team2
+                      team2,
                     )}</div>
                   </div>
                 </div>
@@ -618,8 +670,8 @@ class TournamentApp {
                     <div class="group-header">
                         <div class="group-name">Bảng ${group}</div>
                         <div class="group-count">${teams.length}/${
-          config.teamsPerGroup
-        } đội</div>
+                          config.teamsPerGroup
+                        } đội</div>
                     </div>
                     <ul class="team-list">
                         ${
@@ -654,16 +706,16 @@ class TournamentApp {
                                                 ? "male"
                                                 : "female"
                                             }">${
-                                          p.gender === "M" ? "♂" : "♀"
-                                        }</span>
+                                              p.gender === "M" ? "♂" : "♀"
+                                            }</span>
                                             <span>${p.name}</span>
                                         </div>
-                                    `
+                                    `,
                                       )
                                       .join("")}
                                 </div>
                             </li>
-                        `
+                        `,
                           )
                           .join("")}
                     </ul>
@@ -696,7 +748,7 @@ class TournamentApp {
     return tournament.matches.groupStage.find(
       (m) =>
         (m.team1 === team1Id && m.team2 === team2Id) ||
-        (m.team1 === team2Id && m.team2 === team1Id)
+        (m.team1 === team2Id && m.team2 === team1Id),
     );
   }
 
@@ -734,7 +786,7 @@ class TournamentApp {
                                           team.name
                                         }</div>
                                         <div style="font-size: 0.85rem; color: var(--text-secondary);">${this.getTeamDisplayName(
-                                          team
+                                          team,
                                         )}</div>
                                     </td>
                                     <td>Bảng ${team.group}</td>
@@ -744,11 +796,11 @@ class TournamentApp {
                                         ? "stat-positive"
                                         : "stat-negative"
                                     }">${team.stats.pointDiff > 0 ? "+" : ""}${
-                                  team.stats.pointDiff
-                                }</td>
+                                      team.stats.pointDiff
+                                    }</td>
                                     <td>${team.stats.pointsFor}</td>
                                 </tr>
-                            `
+                            `,
                               )
                               .join("")}
                         </tbody>
@@ -784,15 +836,15 @@ class TournamentApp {
                                       idx === 0
                                         ? "rank-1"
                                         : idx === 1
-                                        ? "rank-2"
-                                        : "rank-default"
+                                          ? "rank-2"
+                                          : "rank-default"
                                     }">${idx + 1}</span></td>
                                     <td>
                                         <div style="font-weight: 700;">${
                                           team.name
                                         }</div>
                                         <div style="font-size: 0.85rem; color: var(--text-secondary);">${this.getTeamDisplayName(
-                                          team
+                                          team,
                                         )}</div>
                                     </td>
                                     <td>${
@@ -807,10 +859,10 @@ class TournamentApp {
                                         ? "stat-positive"
                                         : "stat-negative"
                                     }">${team.stats.pointDiff > 0 ? "+" : ""}${
-                                  team.stats.pointDiff
-                                }</td>
+                                      team.stats.pointDiff
+                                    }</td>
                                 </tr>
-                            `
+                            `,
                               )
                               .join("")}
                         </tbody>
@@ -830,7 +882,7 @@ class TournamentApp {
                           .map((fixture, idx) => {
                             const match = this.getMatchResult(
                               fixture.team1.id,
-                              fixture.team2.id
+                              fixture.team2.id,
                             );
                             const hasScore =
                               match &&
@@ -868,8 +920,8 @@ class TournamentApp {
                                    onclick="app.openGroupMatchModal('${
                                      fixture.team1.id
                                    }', '${fixture.team2.id}', '${
-                              this.currentGroup
-                            }')">
+                                     this.currentGroup
+                                   }')">
                                 <div class="fixture-match-number">Trận ${
                                   idx + 1
                                 }</div>
@@ -879,7 +931,7 @@ class TournamentApp {
                                       team1Display.name
                                     }</div>
                                     <div class="fixture-players">${this.getTeamDisplayName(
-                                      team1Display
+                                      team1Display,
                                     )}</div>
                                   </div>
                                   <div class="fixture-score">
@@ -896,7 +948,7 @@ class TournamentApp {
                                       team2Display.name
                                     }</div>
                                     <div class="fixture-players">${this.getTeamDisplayName(
-                                      team2Display
+                                      team2Display,
                                     )}</div>
                                   </div>
                                 </div>
@@ -935,9 +987,8 @@ class TournamentApp {
     document.getElementById("modal-group-match-group").value = group;
 
     // Set UI elements
-    document.getElementById(
-      "group-score-modal-title"
-    ).textContent = `Cập nhật tỉ số - Bảng ${group}`;
+    document.getElementById("group-score-modal-title").textContent =
+      `Cập nhật tỉ số - Bảng ${group}`;
     document.getElementById("modal-group-team1-name").textContent = team1.name;
     document.getElementById("modal-group-team1-players").textContent =
       this.getTeamDisplayName(team1);
@@ -1018,7 +1069,7 @@ class TournamentApp {
   resetAllData() {
     if (
       confirm(
-        "Bạn có chắc chắn muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!"
+        "Bạn có chắc chắn muốn xóa tất cả dữ liệu? Hành động này không thể hoàn tác!",
       )
     ) {
       localStorage.removeItem("pickleball-tournament");
@@ -1035,7 +1086,7 @@ class TournamentApp {
   resetScores() {
     if (
       confirm(
-        "Bạn có chắc chắn muốn đặt lại tất cả điểm số? Các đội vẫn sẽ được giữ lại."
+        "Bạn có chắc chắn muốn đặt lại tất cả điểm số? Các đội vẫn sẽ được giữ lại.",
       )
     ) {
       tournament.resetMatches();
@@ -1060,7 +1111,7 @@ function openMatchModal(
   team1Name,
   team2Name,
   score1,
-  score2
+  score2,
 ) {
   const modal = document.getElementById("match-score-modal");
 
@@ -1104,7 +1155,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add event listener for group match score modal save button
   const saveGroupMatchScoreBtn = document.getElementById(
-    "save-group-match-score-btn"
+    "save-group-match-score-btn",
   );
   if (saveGroupMatchScoreBtn) {
     saveGroupMatchScoreBtn.addEventListener("click", () => {
